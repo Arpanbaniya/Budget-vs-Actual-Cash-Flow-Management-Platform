@@ -2,6 +2,15 @@
 
 Create **two Vercel projects from the same GitHub repository**. Keep Git integration enabled for deployments on push.
 
+## Current production projects
+
+| Service | GitHub root directory | Production URL |
+| --- | --- | --- |
+| Frontend | `frontend/` | https://flow-forecast-web-plum.vercel.app |
+| Backend | `backend/` | https://flow-forecast-api-one.vercel.app |
+
+Both projects are in the Vercel team **Arpanbaniya's projects** and connected to the `main` branch. The backend project has `FRONTEND_ORIGINS=https://flow-forecast-web-plum.vercel.app` for Production. The frontend has `NEXT_PUBLIC_API_BASE_URL=https://flow-forecast-api-one.vercel.app` for Production and Preview. No other application credentials are configured at this phase.
+
 ## Backend project
 
 1. Import `Arpanbaniya/Budget-vs-Actual-Cash-Flow-Management-Platform`.

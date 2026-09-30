@@ -2,6 +2,13 @@
 
 Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. This repository currently contains the **deployable foundation**: a Next.js landing page and a FastAPI health endpoint. The finance workflow described in the planning documents is not implemented yet.
 
+## Live foundation
+
+- Frontend: https://flow-forecast-web-plum.vercel.app
+- Backend health: https://flow-forecast-api-one.vercel.app/api/v1/health
+
+Both Vercel projects import this GitHub repository and deploy from `main`.
+
 ## Repository
 
 - `frontend/` — Next.js 16, React 19, TypeScript, Tailwind CSS
