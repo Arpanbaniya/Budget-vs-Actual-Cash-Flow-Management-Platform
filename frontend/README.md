@@ -1,36 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Flow & Forecast frontend
 
-## Getting Started
+The Next.js 16 application is the frontend service in the repository's single Vercel Services project. The live Phase 1 foundation is at https://flow-forecast.vercel.app.
 
-First, run the development server:
+The landing page previews the intended workflow and labels sample figures as illustrative. `/dashboard` currently redirects to `/login`, which explains that authentication arrives in Phase 3. No finance or account data is exposed by these placeholder routes.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
+## Local development
+
+```powershell
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. Run the FastAPI backend separately on port 8000 if you want to check the API. `NEXT_PUBLIC_API_BASE_URL` in `.env.example` shows the local backend URL; future production API calls should use the shared origin and relative `/api/v1/...` paths.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```powershell
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The root [README](../README.md) covers the full repository and deployment.

@@ -1,6 +1,6 @@
 # Flow & Forecast
 
-Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. This repository currently contains the **deployable foundation**: a Next.js landing page and a FastAPI health endpoint. The finance workflow described in the planning documents is not implemented yet.
+Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. This repository currently contains the **Phase 1 foundation**: a Next.js landing page, a gated dashboard placeholder, and a FastAPI health endpoint. The finance workflow described in the planning documents is not implemented yet.
 
 ## Live foundation
 
@@ -13,6 +13,7 @@ One Vercel Services project imports this GitHub repository and deploys both serv
 
 - `frontend/` — Next.js 16, React 19, TypeScript, Tailwind CSS
 - `backend/` — FastAPI with `GET /api/v1/health`
+- `supabase/` — reserved for Phase 2 migrations and private Storage policies
 - `docs/` — architecture and deployment notes
 - `BUDGET_ACTUAL_CASHFLOW_CODEX_END_TO_END_PLAN.md` — full implementation specification
 - `BUDGET_ACTUAL_CASHFLOW_LEARNING_GUIDE.md` — finance and phase guide
@@ -34,17 +35,18 @@ cd backend
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements-dev.txt
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --no-access-log
 ```
 
-Then open `http://localhost:3000` and `http://localhost:8000/api/v1/health`.
+Then open `http://localhost:3000` and `http://localhost:8000/api/v1/health`. Visiting `/dashboard` redirects to the `/login` placeholder until Phase 3 adds real authentication.
 
 ## Checks
 
 ```powershell
 cd frontend
 pnpm lint
-pnpm exec tsc --noEmit
+pnpm typecheck
+pnpm test
 pnpm build
 
 cd ../backend
