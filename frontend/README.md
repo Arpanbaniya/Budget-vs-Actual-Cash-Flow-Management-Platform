@@ -1,6 +1,6 @@
 # Flow & Forecast frontend
 
-The Next.js 16 application is the frontend service in the repository's single Vercel Services project. The live Phase 1 foundation is at https://flow-forecast.vercel.app.
+The Next.js 16 application is the frontend service in the repository's single Vercel Services project. The live Phase 1 foundation is at https://flow-forecast.vercel.app/. Phase 2 adds header-only CSV templates in `public/templates/` for later import flows.
 
 The landing page previews the intended workflow and labels sample figures as illustrative. `/dashboard` currently redirects to `/login`, which explains that authentication arrives in Phase 3. No finance or account data is exposed by these placeholder routes.
 

@@ -1,0 +1,2 @@
+# Local Supabase CLI identifier. The remote project is selected by `supabase link`.
+project_id = "flow-forecast"
