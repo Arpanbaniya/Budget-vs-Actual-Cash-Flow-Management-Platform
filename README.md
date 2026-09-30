@@ -4,10 +4,10 @@ Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application
 
 ## Live foundation
 
-- Frontend: https://flow-forecast-web-plum.vercel.app
-- Backend health: https://flow-forecast-api-one.vercel.app/api/v1/health
+- Application: https://flow-forecast.vercel.app
+- API health: https://flow-forecast.vercel.app/api/v1/health
 
-Both Vercel projects import this GitHub repository and deploy from `main`.
+One Vercel Services project imports this GitHub repository and deploys both services from `main`.
 
 ## Repository
 
@@ -54,7 +54,7 @@ pytest
 
 ## Deployment
 
-Import this GitHub repository twice in Vercel, once with root directory `backend` and once with root directory `frontend`. See [deployment notes](docs/deployment.md). The backend must be deployed first so its URL can be used for the frontend configuration in later phases.
+Import the repository once in Vercel with the repository root (`./`) and the Services preset. The root [vercel.json](vercel.json) routes `/api/*` to FastAPI and all other requests to Next.js. See [deployment notes](docs/deployment.md).
 
 ## Current limitations
 
