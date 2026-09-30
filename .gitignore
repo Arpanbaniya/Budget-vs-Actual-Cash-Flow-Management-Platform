@@ -1,0 +1,12 @@
+**/node_modules/
+**/.next/
+**/.vercel/
+**/.git.scaffold-backup/
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.env
+**/.env.local
+**/.env.*.local
+*.pyc

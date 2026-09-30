@@ -1,0 +1,9 @@
+[tool.vercel]
+entrypoint = "api.index:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
