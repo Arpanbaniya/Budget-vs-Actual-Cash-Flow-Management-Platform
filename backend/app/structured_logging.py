@@ -20,6 +20,9 @@ class JsonFormatter(logging.Formatter):
 
 
 def configure_logging(level: str) -> logging.Logger:
+    # Library debug traces can contain HTTP headers. Keep transport logs quiet.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
     logger = logging.getLogger("flow_forecast.api")
     logger.setLevel(level)
     logger.propagate = False

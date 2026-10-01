@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/v1/companies", tags=["companies"])
 Name = Annotated[str, Field(min_length=1, max_length=200)]
 Currency = Annotated[str, Field(pattern=r"^[A-Z]{3}$")]
 FiscalMonth = Annotated[int, Field(ge=1, le=12, strict=True)]
-Money = Annotated[Decimal, Field(ge=0, allow_inf_nan=False)]
+Money = Annotated[Decimal, Field(ge=0, le=Decimal("1e20"), decimal_places=10, allow_inf_nan=False)]
 
 
 class CompanyFields(BaseModel):
@@ -206,6 +206,8 @@ async def list_companies(store: Store) -> list[Company]:
         )
         rows = store.rows(response)
         companies.extend(Company.model_validate(row) for row in rows)
+        if len(companies) > 10000:
+            raise ApiError(422, "DATA_LIMIT", "The company list exceeds the supported limit.")
         if len(rows) < 100:
             return companies
         offset += len(rows)

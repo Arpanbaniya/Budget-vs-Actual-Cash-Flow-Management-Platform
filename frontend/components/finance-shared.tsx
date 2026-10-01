@@ -12,11 +12,15 @@ export const buttonClass =
 
 export function money(value: string | number | null, currency?: string) {
   if (value === null) return "—";
-  return new Intl.NumberFormat("en", {
+  const formatter = new Intl.NumberFormat("en", {
     style: currency ? "currency" : "decimal",
     currency,
     maximumFractionDigits: 2,
-  }).format(Number(value));
+  });
+  // Modern Intl accepts exact decimal strings; the older TypeScript lib signature
+  // excludes them. Keep the string intact instead of rounding through Number.
+  const formatExact = formatter.format as (value: string | number) => string;
+  return formatExact(value);
 }
 
 export function CompanyScope({

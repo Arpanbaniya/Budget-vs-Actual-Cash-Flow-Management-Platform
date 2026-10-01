@@ -33,7 +33,7 @@ def create_app() -> FastAPI:
     application.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.frontend_origins),
-        allow_credentials=True,
+        allow_credentials=False,
         allow_methods=["GET", "POST", "PATCH", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
     )
@@ -59,6 +59,10 @@ def create_app() -> FastAPI:
             )
             raise
         route = request.scope.get("route")
+        if request.url.path.startswith("/api/"):
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            if request.url.path != "/api/v1/health":
+                response.headers["Cache-Control"] = "private, no-store"
         logger.info(
             "http_request",
             extra={

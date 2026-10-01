@@ -8,5 +8,7 @@
 **/.ruff_cache/
 **/.env
 **/.env.local
+**/.env.*
+!**/.env.example
 **/.env.*.local
 *.pyc

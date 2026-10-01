@@ -31,6 +31,13 @@ Phase 12: commit `e301840`, production Ready and CI success, 129 backend and 19 
 
 Phase 13 adds formatted, formula-safe eight-sheet Excel reports, private storage,
 five-minute signed downloads, status metadata, and report management.
+Phase 13: commit `f621452`, production and CI success, 135 backend and 20 frontend tests.
+
+Phase 14 audits ownership, private storage, bearer authentication, input bounds,
+logging, caching, safe Excel output, retries, and deletion semantics. Confirmed
+issues have regression tests; see `SECURITY.md`.
+Checks: 147 backend and 21 frontend tests, lint/typecheck, and read-only live
+RLS, bucket privacy, and import-function inspection.
 
 The user's single-project deployment requirement applies throughout: Next.js and FastAPI
 remain services of `flow-forecast`, at https://flow-forecast.vercel.app/.

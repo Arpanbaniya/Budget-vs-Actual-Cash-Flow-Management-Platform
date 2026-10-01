@@ -1,12 +1,13 @@
 """Owner-scoped cash records. Forecast calculations live in a separate service."""
 
+import re
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Response
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.companies import CompanyStore, Store
 from app.data import check_period, exact_json, read_rows
@@ -27,6 +28,23 @@ Text = Annotated[str, Field(min_length=1, max_length=500)]
 
 class Fields(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    @field_validator(
+        "balance_date",
+        "expected_date",
+        "start",
+        "end",
+        "cash_start_date",
+        mode="before",
+        check_fields=False,
+    )
+    @classmethod
+    def iso_dates(cls, value):
+        if value is None or (isinstance(value, date) and not isinstance(value, datetime)):
+            return value
+        if not isinstance(value, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value):
+            raise ValueError("Use a date in YYYY-MM-DD format")
+        return value
 
 
 class BalanceCreate(Fields):

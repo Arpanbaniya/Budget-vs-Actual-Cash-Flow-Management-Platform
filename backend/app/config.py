@@ -4,16 +4,17 @@ import os
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
 
 
 class Settings(BaseModel):
+    model_config = ConfigDict(hide_input_in_errors=True)
     frontend_origins: tuple[str, ...]
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     supabase_url: str | None = None
     supabase_publishable_key: str | None = None
     ai_provider: Literal["none", "groq"] = "none"
-    groq_api_key: str | None = None
+    groq_api_key: SecretStr | None = Field(default=None, repr=False)
     groq_model: str = Field(default="llama-3.3-70b-versatile", min_length=1, max_length=200)
     ai_timeout_seconds: float = Field(default=20, ge=1, le=60, allow_inf_nan=False)
 

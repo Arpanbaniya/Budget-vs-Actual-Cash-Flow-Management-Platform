@@ -150,7 +150,7 @@ async def groq_commentary(pack: dict, settings) -> str | None:
             client.stream(
                 "POST",
                 "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {settings.groq_api_key}"},
+                headers={"Authorization": f"Bearer {settings.groq_api_key.get_secret_value()}"},
                 json={
                     "model": settings.groq_model,
                     "temperature": 0,

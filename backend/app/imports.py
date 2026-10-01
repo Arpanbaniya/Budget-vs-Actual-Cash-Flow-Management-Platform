@@ -243,6 +243,8 @@ async def list_imports(
         )
         rows = result.json()
         records.extend(ImportMetadata.model_validate(row) for row in rows)
+        if len(records) > 10000:
+            raise ApiError(422, "DATA_LIMIT", "Filter imports to load fewer than 10,000 records.")
         if len(rows) < 100:
             return records
         offset += len(rows)
