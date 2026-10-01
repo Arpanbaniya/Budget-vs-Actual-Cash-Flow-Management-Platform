@@ -67,19 +67,23 @@ class CompanyStore:
         self.client = client
         self.user = user
 
-    async def request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
+    async def request(
+        self, method: str, path: str, *, allowed_statuses: tuple[int, ...] = (), **kwargs: Any
+    ) -> httpx.Response:
         try:
             response = await self.client.request(method, path, **kwargs)
         except httpx.RequestError as error:
             raise ApiError(
-                503, "DATA_UNAVAILABLE", "Company data is temporarily unavailable."
+                503, "DATA_UNAVAILABLE", "Workspace data is temporarily unavailable."
             ) from error
         if response.status_code in {401, 403}:
             raise ApiError(401, "AUTH_INVALID", "Your session expired. Please sign in again.")
+        if response.status_code in allowed_statuses:
+            return response
         if response.status_code == 409:
-            raise ApiError(409, "COMPANY_CONFLICT", "The company could not be changed. Try again.")
+            raise ApiError(409, "DATA_CONFLICT", "The record could not be changed. Try again.")
         if not response.is_success:
-            raise ApiError(503, "DATA_UNAVAILABLE", "Company data is temporarily unavailable.")
+            raise ApiError(503, "DATA_UNAVAILABLE", "Workspace data is temporarily unavailable.")
         return response
 
     def scope(self, company_id: UUID | None = None) -> dict[str, str]:

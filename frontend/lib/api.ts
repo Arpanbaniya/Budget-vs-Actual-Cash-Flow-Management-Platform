@@ -11,6 +11,17 @@ export type Company = {
   updated_at: string;
 };
 
+export class ApiRequestError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public code?: string,
+  ) {
+    super(message);
+    this.name = "ApiRequestError";
+  }
+}
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
@@ -30,13 +41,22 @@ export async function apiRequest<T>(
   });
   if (!response.ok) {
     const body = await response.json().catch(() => null);
-    if (response.status === 422) {
-      throw new Error(
+    if (
+      response.status === 422 &&
+      body?.error?.code === "REQUEST_INVALID" &&
+      path.startsWith("/companies") &&
+      !path.includes("/imports")
+    ) {
+      throw new ApiRequestError(
         "Check the company name, three-letter currency, fiscal month, and nonnegative cash threshold.",
+        response.status,
+        body?.error?.code,
       );
     }
-    throw new Error(
+    throw new ApiRequestError(
       body?.error?.message ?? "The request failed. Please try again.",
+      response.status,
+      body?.error?.code,
     );
   }
   return response.status === 204

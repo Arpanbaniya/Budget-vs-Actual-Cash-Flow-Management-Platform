@@ -8,4 +8,6 @@ The frontend has Supabase SSR/cookie auth utilities, a Next.js Proxy for session
 
 Company management flows from the protected Next.js workspace to FastAPI, then to Supabase's Data API using the caller's JWT. The API sets `user_id` on creation and filters all other operations by verified user ID; RLS provides an additional ownership boundary. Cash thresholds use decimal values and are returned as strings to preserve precision. Company deletion discovers files only under the verified user's company prefix in both private buckets, removes their bytes through the Storage API, and then deletes the company row and its dependent records.
 
-Later phases will add imports, deterministic finance services, optional Groq commentary, and Excel reports. The dashboard currently displays company settings.
+Phase 5 imports follow browser → FastAPI reservation → direct browser PUT to a signed Supabase Storage URL → FastAPI completion. The API receives JSON metadata only. Completion reads private Storage object metadata, checks the actual size against the reservation and 5 MB limit, then conditionally changes `reserved` to `uploaded`. Import deletion removes the private object first and deletes the import row; foreign keys cascade its derived financial/cash rows. See [direct imports](imports.md).
+
+Later phases will add file parsing, deterministic finance services, optional Groq commentary, and Excel reports. The dashboard displays company settings and links to uploads.

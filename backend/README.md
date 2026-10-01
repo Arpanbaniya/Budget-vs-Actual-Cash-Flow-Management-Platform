@@ -26,4 +26,6 @@ ruff check .
 pytest
 ```
 
-Tests simulate Supabase Auth, Data API, and Storage responses; they do not need a production database. Imports and finance endpoints belong to later phases.
+Phase 5 adds `app/imports.py`: reserve a company import, complete it after checking Storage metadata, list imports with optional kind/status filters, read metadata, and delete an import and its stored object. The existing foreign keys cascade derived rows. Only CSV/XLSX and budget/actual/cash are accepted, with a 5 MB application limit checked at reservation and completion. FastAPI never receives file bytes. See [direct imports](../docs/imports.md) for the contract and failure handling.
+
+Tests simulate Supabase Auth, Data API, and Storage responses; they do not need a production database. They cover upload reservation, safe paths, ownership, actual file sizes, state conflicts, pagination, signing rollback, and deletion failures. Parsing and finance endpoints belong to later phases.

@@ -241,9 +241,16 @@ export function CompanyWorkspace({
               ))}
             </dl>
             <p className="mt-8 text-sm leading-6 text-[#53675d]">
-              Your company is set up. Financial summaries will appear as the
-              import and analysis tools are added.
+              Upload your budget, actual, or cash files to prepare your company
+              data. Financial summaries will appear when file processing is
+              added.
             </p>
+            <Link
+              href="/imports"
+              className="mt-4 inline-block rounded-xl bg-[#164d3b] px-5 py-3 font-medium text-white"
+            >
+              Upload company files
+            </Link>
           </section>
         ) : (
           <section className={`${panelClass} mt-8`}>

@@ -1,6 +1,6 @@
 # Flow & Forecast
 
-Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. The repository now includes **Phase 4 company management** alongside email/password authentication. Signed-in users can create, select, edit, and delete their own companies and view company settings on the dashboard. It is connected to the Supabase project for this repository. The import and finance analysis workflow described in the planning documents is not implemented yet.
+Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. The repository now includes **Phase 5 direct file uploads** alongside email/password authentication and company management. Signed-in users can manage their companies and upload budget, actual, and cash files directly to private Supabase Storage. The import page includes CSV templates, upload history, status filters, retry controls, and deletion. File parsing and finance analysis belong to later phases.
 
 ## Live app
 
@@ -11,7 +11,7 @@ One Vercel Services project imports this GitHub repository and deploys both serv
 ## Repository
 
 - `frontend/` — Next.js 16, React 19, TypeScript, Tailwind CSS
-- `backend/` — FastAPI with authentication verification and protected company CRUD
+- `backend/` — FastAPI with authentication verification, company CRUD, and import upload lifecycle
 - `supabase/` — Phase 2 migrations, RLS, and private Storage policies
 - `docs/` — architecture, database, authentication, and deployment notes
 - `BUDGET_ACTUAL_CASHFLOW_CODEX_END_TO_END_PLAN.md` — full implementation specification
@@ -61,6 +61,8 @@ Both Phase 2 database migrations are applied to the connected Supabase project; 
 
 Phase 4 uses those same environment variables and existing tables. See [company management](docs/companies.md) for API examples, validation rules, and deletion behavior. Production requests use the shared Vercel origin; local browser requests use `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000`.
 
+Phase 5 uses the existing private `fpna-imports` bucket and schema. See [direct imports](docs/imports.md) for the reserve/upload/complete flow, the 5 MB limit, API examples, and recovery behavior. File bytes travel from the browser directly to Supabase; FastAPI handles metadata only.
+
 ## Current limitations
 
-Supabase's default email sender only sends confirmation email to members of the Supabase organization. Public signup needs a custom SMTP provider. There is no data import, variance engine, cash forecast, scenario engine, AI commentary, or Excel reporting yet. Figures on the landing page are explicitly illustrative.
+Supabase's default email sender only sends confirmation email to members of the Supabase organization. Public signup needs a custom SMTP provider. Uploaded files are stored privately but are not yet parsed into financial rows. There is no variance engine, cash forecast, scenario engine, AI commentary, or Excel reporting yet. Figures on the landing page are explicitly illustrative.
