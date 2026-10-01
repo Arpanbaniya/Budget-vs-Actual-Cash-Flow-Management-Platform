@@ -168,6 +168,9 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
                         for row in selected
                         if (row[field] >= value if operation == "gte" else row[field] <= value)
                     ]
+            if "balance_date" in request.url.params:
+                cutoff = request.url.params["balance_date"].removeprefix("lte.")
+                selected = [row for row in selected if row["balance_date"] <= cutoff]
             if request.method == "GET":
                 field = "balance_date" if table == "cash_balances" else "expected_date"
                 selected.sort(

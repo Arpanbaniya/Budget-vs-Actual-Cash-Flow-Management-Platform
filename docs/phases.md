@@ -11,6 +11,10 @@ Phase 7: commit `f01d1b3`, production and CI success, 93 backend and 13 frontend
 tests; variance forms, table, and chart verified in the browser.
 
 Phase 8 adds cash-balance and cash-item CRUD and the `/cash` page.
+Phase 8: commit `269ca74`, production and both CI jobs success, 104 backend and
+14 frontend tests. Imported cash-item edits verified in the browser.
+
+Phase 9 adds the weekly cash forecast and threshold alerts.
 
 The user's single-project deployment requirement applies throughout: Next.js and FastAPI
 remain services of `flow-forecast`, at https://flow-forecast.vercel.app/.
