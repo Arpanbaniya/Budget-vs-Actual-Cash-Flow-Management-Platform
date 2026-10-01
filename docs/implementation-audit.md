@@ -1,6 +1,6 @@
 # Implementation and working-condition audit
 
-Audit date: October 1, 2026. Reviewed commit: `5879b8e5543951155398b6fe356f3604dd9ffc95`.
+Audit date: October 1, 2026. Reviewed commit: `d97cd3759aca470f694c84f575db4b27dd834a59`.
 
 Specification: `BUDGET_ACTUAL_CASHFLOW_CODEX_END_TO_END_PLAN.md`.
 The user's subsequent requirement for one Vercel project overrides the plan's
@@ -42,7 +42,7 @@ checks.
 | Frontend Vitest | 21 passed across 11 files |
 | Next.js optimized production build | Passed |
 | Documented API operations vs application OpenAPI | All 35 method/path combinations present |
-| GitHub Actions for reviewed commit | Success; run `36886293789` |
+| GitHub Actions for reviewed commit | Success; run `36888756743` |
 | Vercel status for reviewed commit | Success |
 | Live homepage | HTTP 200 |
 | Live backend health | HTTP 200, `{"status":"ok"}` |

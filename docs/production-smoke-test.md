@@ -7,7 +7,7 @@ Target: [flow-forecast.vercel.app](https://flow-forecast.vercel.app/)
 ## Verified
 
 - Production deployment is Ready on Vercel from the latest repository commit
-  `5879b8e` (application code under test is `9d6033a`).
+  `d97cd37` (application code under test is `9d6033a`).
 - GitHub Actions CI passed for that commit.
 - The supplied account signed in successfully.
 - A company named `Phase 17 Demo` was created with NPR currency and a 90,000
