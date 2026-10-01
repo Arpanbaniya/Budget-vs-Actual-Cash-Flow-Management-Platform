@@ -6,6 +6,7 @@ from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
 from app.auth import AuthenticatedUser, get_authenticated_user
+from app.companies import router as companies_router
 from app.config import Settings
 from app.errors import register_error_handlers
 from app.structured_logging import configure_logging
@@ -25,10 +26,11 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=list(settings.frontend_origins),
         allow_credentials=True,
-        allow_methods=["GET"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
     )
     register_error_handlers(application)
+    application.include_router(companies_router)
 
     @application.middleware("http")
     async def log_request(request: Request, call_next: RequestResponseEndpoint) -> Response:

@@ -1,6 +1,6 @@
 # Flow & Forecast
 
-Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. The repository now includes **Phase 3 authentication**: signup, login, logout, protected dashboard, and FastAPI bearer-token verification. It is connected to the Supabase project for this repository. The finance workflow described in the planning documents is not implemented yet.
+Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. The repository now includes **Phase 4 company management** alongside email/password authentication. Signed-in users can create, select, edit, and delete their own companies and view company settings on the dashboard. It is connected to the Supabase project for this repository. The import and finance analysis workflow described in the planning documents is not implemented yet.
 
 ## Live app
 
@@ -11,7 +11,7 @@ One Vercel Services project imports this GitHub repository and deploys both serv
 ## Repository
 
 - `frontend/` — Next.js 16, React 19, TypeScript, Tailwind CSS
-- `backend/` — FastAPI with public health and protected `GET /api/v1/me`
+- `backend/` — FastAPI with authentication verification and protected company CRUD
 - `supabase/` — Phase 2 migrations, RLS, and private Storage policies
 - `docs/` — architecture, database, authentication, and deployment notes
 - `BUDGET_ACTUAL_CASHFLOW_CODEX_END_TO_END_PLAN.md` — full implementation specification
@@ -59,6 +59,8 @@ Import the repository once in Vercel with the repository root (`./`) and the Ser
 
 Both Phase 2 database migrations are applied to the connected Supabase project; see [database notes](docs/database.md). The single Vercel project has the Phase 3 production environment variables; see [authentication setup](docs/auth.md).
 
+Phase 4 uses those same environment variables and existing tables. See [company management](docs/companies.md) for API examples, validation rules, and deletion behavior. Production requests use the shared Vercel origin; local browser requests use `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000`.
+
 ## Current limitations
 
-Supabase's default email sender only sends confirmation email to members of the Supabase organization. Public signup needs a custom SMTP provider. There is no company management, data import, variance engine, cash forecast, scenario engine, AI commentary, or Excel reporting yet. Figures on the landing page are explicitly illustrative.
+Supabase's default email sender only sends confirmation email to members of the Supabase organization. Public signup needs a custom SMTP provider. There is no data import, variance engine, cash forecast, scenario engine, AI commentary, or Excel reporting yet. Figures on the landing page are explicitly illustrative.

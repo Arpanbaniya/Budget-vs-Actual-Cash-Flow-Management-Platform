@@ -17,7 +17,7 @@ Phase 2 defines the data model in [the schema migration](../supabase/migrations/
 
 Every table has `user_id` and Row Level Security. Separate SELECT, INSERT, UPDATE, and DELETE policies allow an authenticated user to access only rows with their own `user_id`. Composite foreign keys prevent a user's child record from referencing another user's company or import. Backend ownership checks are still required when the API is implemented.
 
-Deleting a company cascades to its related database records. Storage objects are separate and need explicit cleanup by the application when deletion is implemented.
+Deleting a company cascades to its related database records. The Phase 4 delete endpoint removes private objects under that company's user/company folders through the Storage API before deleting the company row. See [company management](companies.md) for failure and retry behavior.
 
 ## Private files
 

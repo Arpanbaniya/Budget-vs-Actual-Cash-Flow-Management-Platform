@@ -54,7 +54,7 @@ Supabase's default SMTP only sends to email addresses belonging to this project'
 3. `/dashboard` offers a sign-out action that clears the Supabase session.
 4. `GET /api/v1/me` requires `Authorization: Bearer <access_token>`. FastAPI asks the project's Supabase Auth server to validate the token and returns the user ID and email. Missing/invalid tokens return 401. `GET /api/v1/health` stays public.
 
-Future frontend API calls must attach the access token to their request. Future data endpoints must filter by `user_id` and check resource ownership even though the database also has RLS. A cross-user resource should return 404.
+The Phase 4 frontend API helper attaches the session access token to each company request. FastAPI verifies it, forwards it to Supabase, and filters data by `user_id` in addition to RLS. A cross-user company returns 404. Future data endpoints must follow the same ownership rules.
 
 Without local Supabase environment values, the public site remains available, the login/signup forms show a setup message, and the dashboard remains closed.
 
