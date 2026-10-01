@@ -1,6 +1,6 @@
 # Flow & Forecast
 
-Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. The repository now includes **Phase 5 direct file uploads** alongside email/password authentication and company management. Signed-in users can manage their companies and upload budget, actual, and cash files directly to private Supabase Storage. The import page includes CSV templates, upload history, status filters, retry controls, and deletion. File parsing and finance analysis belong to later phases.
+Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. **Phase 6 import processing** is implemented alongside authentication, company management, and direct private uploads. Signed-in users can upload and process budget, actual, and cash CSV/XLSX files, see row-numbered validation errors and warnings, and safely retry interrupted processing. Finance analysis belongs to later phases.
 
 ## Live app
 
@@ -61,8 +61,8 @@ Both Phase 2 database migrations are applied to the connected Supabase project; 
 
 Phase 4 uses those same environment variables and existing tables. See [company management](docs/companies.md) for API examples, validation rules, and deletion behavior. Production requests use the shared Vercel origin; local browser requests use `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000`.
 
-Phase 5 uses the existing private `fpna-imports` bucket and schema. See [direct imports](docs/imports.md) for the reserve/upload/complete flow, the 5 MB limit, API examples, and recovery behavior. File bytes travel from the browser directly to Supabase; FastAPI handles metadata only.
+Uploads go directly from the browser to the private `fpna-imports` bucket. FastAPI downloads stored files only when processing is requested. See [imports](docs/imports.md) for formats and recovery behavior. The Phase 6 migration adds transactional row persistence and processing leases and is applied to production.
 
 ## Current limitations
 
-Supabase's default email sender only sends confirmation email to members of the Supabase organization. Public signup needs a custom SMTP provider. Uploaded files are stored privately but are not yet parsed into financial rows. There is no variance engine, cash forecast, scenario engine, AI commentary, or Excel reporting yet. Figures on the landing page are explicitly illustrative.
+Supabase's default email sender only sends confirmation email to members of the Supabase organization. Public signup needs a custom SMTP provider. There is no variance engine, cash forecast, scenario engine, AI commentary, or Excel reporting yet. Figures on the landing page are explicitly illustrative.

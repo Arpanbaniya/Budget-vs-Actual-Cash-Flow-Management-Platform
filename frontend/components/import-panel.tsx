@@ -84,7 +84,7 @@ export function ImportPanel({
     });
     remember(record);
     setNotice(
-      `${labels[record.kind]} file uploaded for ${company.name}. File processing will be added next.`,
+      `${labels[record.kind]} file uploaded for ${company.name}. Choose Process file to validate its rows.`,
     );
     if (pending?.reservation.import_id === id) setPending(null);
     setFile(null);
@@ -163,6 +163,25 @@ export function ImportPanel({
     }
   }
 
+  async function processFile(id: string) {
+    onBusyChange(true);
+    setError(null);
+    setNotice(null);
+    setStep("Processing and validating rows…");
+    setImports((current) => current.map((item) => item.id === id ? { ...item, status: "processing" } : item));
+    try {
+      const result = await apiRequest<{ row_count: number }>(`/imports/${id}/process`, { method: "POST" });
+      setNotice(`${result.row_count} rows processed successfully.`);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Processing failed.");
+    } finally {
+      try { remember(await apiRequest<ImportRecord>(`/imports/${id}`)); }
+      catch { setRetry((value) => value + 1); }
+      onBusyChange(false);
+      setStep("");
+    }
+  }
+
   async function remove(id: string) {
     onBusyChange(true);
     setError(null);
@@ -211,8 +230,8 @@ export function ImportPanel({
         <section className={panelClass}>
           <h2 className="text-2xl font-semibold">Upload to {company.name}</h2>
           <p className="mt-2 text-sm leading-6 text-[#53675d]">
-            CSV or XLSX, up to 5 MB. Files remain private. Uploading stores your
-            file; it does not yet parse or validate financial rows.
+            CSV or XLSX, up to 5 MB. Files remain private. After uploading, choose
+            Process file to validate and save rows. XLSX uses the first worksheet.
           </p>
           <form
             onSubmit={(event) => void upload(event)}
@@ -435,8 +454,20 @@ export function ImportPanel({
                         Stored privately. Financial rows have not been parsed.
                       </p>
                     )}
+                    {item.row_count !== null && <p className="mt-2 text-sm">Rows: {item.row_count}</p>}
+                    {item.error_message && <p className="mt-2 text-sm text-[#8b372c]">{item.error_message}</p>}
+                    {[...(item.validation_errors ?? []), ...(item.warnings ?? [])].map((issue, index) => (
+                      <p key={index} className="mt-1 text-sm">Row {issue.row} · {issue.field}: {issue.message}</p>
+                    ))}
+                    {item.status === "processing" && <p className="mt-2 text-xs">Processing… Refresh to check progress. Interrupted runs can be retried after ten minutes.</p>}
                   </div>
                   <div className="flex flex-wrap gap-3">
+                    {["uploaded", "failed", "processing"].includes(item.status) && (
+                      <button type="button" disabled={busy || loading} onClick={() => void processFile(item.id)}
+                        className="rounded-lg bg-[#164d3b] px-3 py-2 text-sm text-white disabled:opacity-60">
+                        {item.status === "processing" ? "Recover processing" : "Process file"}
+                      </button>
+                    )}
                     {item.status === "reserved" && (
                       <button
                         type="button"

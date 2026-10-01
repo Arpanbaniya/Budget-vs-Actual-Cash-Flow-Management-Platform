@@ -1,6 +1,6 @@
 # Direct imports — Phase 5
 
-The protected `/imports` page uses the same user-specific company selection as `/companies` and `/dashboard`. Users select budget, actual, or cash and a CSV/XLSX file. Blank CSV templates are downloadable for each kind. Files remain private; this phase stores files and metadata without parsing financial rows.
+The protected `/imports` page uses the same user-specific company selection as `/companies` and `/dashboard`. Users select budget, actual, or cash and a CSV/XLSX file. Blank CSV templates are downloadable for each kind. Files remain private; processing validates and saves financial rows after upload.
 
 ## Upload flow
 
@@ -48,7 +48,7 @@ Response:
 
 Filename is required, trimmed, and limited to 255 input characters. Directory components are removed; the stored filename uses a bounded ASCII stem and lowercase `.csv`/`.xlsx`. MIME metadata is normalized to the extension's canonical type. Blank/unspecified MIME (`""`), octet-stream, and common CSV browser types are accepted; incompatible MIME is rejected. `size_bytes` must be a positive integer. Unknown request fields are rejected.
 
-Oversize files return 413. Invalid extension, kind, MIME, or reservation size return 422. Missing objects and non-reserved completion return 409. A stored size different from the reservation returns 422; unverifiable size returns 503. Another user's company/import returns 404 before any Storage operation. Lists paginate all records; no processing endpoint is implemented.
+Oversize files return 413. Invalid extension, kind, MIME, or reservation size return 422. Missing objects and non-reserved completion return 409. A stored size different from the reservation returns 422; unverifiable size returns 503. Another user's company/import returns 404 before any Storage operation. Lists paginate all records; processing is described below.
 
 ## Recovery and deletion
 
@@ -60,8 +60,37 @@ Storage and database operations are not atomic: if database deletion fails after
 
 ## Setup and verification
 
-The existing Phase 2 schema, private buckets, and Phase 3 environment variables are sufficient; there is no new migration or service-role key. Production uses the single Vercel project and shared origin. Local development runs FastAPI on port 8000 and Next.js on port 3000 with `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000`.
+The existing Phase 2 schema, private buckets, and Phase 3 environment variables are sufficient; Phase 6 adds the import-processing migration; no service-role key is used. Production uses the single Vercel project and shared origin. Local development runs FastAPI on port 8000 and Next.js on port 3000 with `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000`.
 
 Backend tests mock Auth, database, and Storage, including size checks, ownership, state conflicts, filtering/pagination, signing rollback, and cascading deletion. Frontend tests exercise reserve → PUT → complete, rejection before reservation, retry, confirmation recovery, filters, company selection, template links, and deletion failures. Browser verification uses the real client and FastAPI with simulated Supabase services; production smoke checks verify deployment and authentication gates.
 
 References: [Supabase signed uploads](https://supabase.com/docs/reference/javascript/storage-from-createsigneduploadurl), [uploading with a signed token](https://supabase.com/docs/reference/javascript/storage-from-uploadtosignedurl), [object metadata](https://supabase.com/docs/reference/javascript/storage-from-info).
+
+## Processing — Phase 6
+
+`POST /api/v1/imports/{id}/process` accepts uploaded/failed imports. Interrupted processing
+can be recovered after a ten-minute lease. Each run has a unique token: a stale worker
+cannot commit over its replacement. CSV is UTF-8 (optional BOM); XLSX uses the first sheet,
+literal values only, no macros. Both support up to 50,000 data rows and 64 columns.
+
+Budget/actual headings: `period,department,account_code,account_name,account_type,amount`.
+Cash headings: `expected_date,description,category,direction,amount,status`.
+Periods accept YYYY-MM or YYYY-MM-DD and normalize to the first day of the month.
+Cash dates require YYYY-MM-DD. Account types are revenue, cogs, operating_expense,
+other_income, other_expense. Cash direction is inflow/outflow and status is
+planned/confirmed/actual. Cash amounts must be nonnegative. Signed financial amounts
+are preserved with warnings. Text is trimmed; account codes remain strings.
+Extra columns are ignored with a warning; malformed/missing/duplicate headings fail.
+At most 100 row-numbered errors/warnings are returned and persisted in import metadata.
+
+The backend downloads the private object with the caller's JWT, enforces the byte limit
+and reserved size again, and validates every row before writing any derived data.
+The Phase 6 migration adds `claim_import` and `commit_import_rows`: security-invoker
+Postgres functions retain caller privileges and RLS. Row replacement and processed
+metadata are committed in one transaction. Failed validation leaves no partial rows;
+processed imports cannot be processed again. Correct a bad source file by deleting
+its failed import and uploading the corrected file. Retry addresses transient errors.
+
+Verification includes pure CSV/XLSX tests, API ownership/retry tests, and frontend
+Process control, row counts, and warnings. No service-role key is used.
+

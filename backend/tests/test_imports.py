@@ -89,7 +89,14 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
                 offset = int(request.url.params.get("offset", 0))
                 return httpx.Response(200, json=selected[offset : offset + 100])
             if request.method == "PATCH":
-                assert request.url.params["status"] == "eq.reserved"
+                assert request.url.params["status"] in {"eq.reserved", "eq.processing"}
+                if "processing_token" in request.url.params:
+                    selected = [
+                        row
+                        for row in selected
+                        if request.url.params["processing_token"]
+                        == f"eq.{row.get('processing_token')}"
+                    ]
                 if controls.get("race"):
                     return httpx.Response(200, json=[])
                 for row in selected:
@@ -103,6 +110,31 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
                             entry for entry in entries if entry["import_id"] != row["id"]
                         ]
                 return httpx.Response(200, json=selected)
+        if path.startswith("/rest/v1/rpc/"):
+            body = json.loads(request.content)
+            row = records.get(body["p_import_id"])
+            if not row or row["user_id"] != owner:
+                return httpx.Response(200, json=[])
+            if path.endswith("claim_import"):
+                if row["status"] not in {"uploaded", "failed"}:
+                    return httpx.Response(200, json=[])
+                row.update(status="processing", processing_token=body["p_token"])
+            else:
+                assert row["status"] == "processing" and row["processing_token"] == body["p_token"]
+                table = "cash_items" if row["kind"] == "cash" else "financial_lines"
+                derived[table] = [
+                    entry for entry in derived[table] if entry["import_id"] != row["id"]
+                ]
+                derived[table].extend({**entry, "import_id": row["id"]} for entry in body["p_rows"])
+                row.update(
+                    status="processed", row_count=len(body["p_rows"]), warnings=body["p_warnings"]
+                )
+            return httpx.Response(200, json=[row])
+        download = "/storage/v1/object/authenticated/fpna-imports/"
+        if path.startswith(download):
+            key = path.removeprefix(download)
+            assert key.startswith(f"{owner}/")
+            return httpx.Response(200, content=controls["file_bytes"])
         sign = "/storage/v1/object/upload/sign/fpna-imports/"
         if path.startswith(sign):
             key = path.removeprefix(sign)
@@ -161,6 +193,40 @@ def reserve(env, **changes):
     return env["client"].post(
         f"/api/v1/companies/{COMPANY_A}/imports/reserve", headers=auth(), json=payload
     )
+
+
+def test_process_is_atomic_and_not_repeatable(imports_api):
+    env = imports_api
+    data = b"period,department,account_code,account_name,account_type,amount\n2026-10,Sales,001,Sales,revenue,123.45\n"
+    reservation = reserve(env, size_bytes=len(data)).json()
+    id = reservation["import_id"]
+    env["objects"][reservation["storage_path"]] = {"size": len(data)}
+    env["controls"]["file_bytes"] = data
+    env["client"].post(f"/api/v1/imports/{id}/complete", headers=auth())
+    response = env["client"].post(f"/api/v1/imports/{id}/process", headers=auth())
+    assert response.status_code == 200 and response.json()["row_count"] == 1
+    assert len(env["derived"]["financial_lines"]) == 1
+    assert env["client"].post(f"/api/v1/imports/{id}/process", headers=auth()).status_code == 409
+    assert (
+        env["client"].post(f"/api/v1/imports/{id}/process", headers=auth("user-b")).status_code
+        == 404
+    )
+
+
+def test_failed_import_has_row_errors_and_retry_does_not_duplicate(imports_api):
+    env = imports_api
+    data = b"period,department,account_code,account_name,account_type,amount\n2026-10,Sales,001,Sales,revenue,bad\n"
+    reservation = reserve(env, size_bytes=len(data)).json()
+    id = reservation["import_id"]
+    env["objects"][reservation["storage_path"]] = {"size": len(data)}
+    env["controls"]["file_bytes"] = data
+    env["client"].post(f"/api/v1/imports/{id}/complete", headers=auth())
+    for _ in range(2):
+        response = env["client"].post(f"/api/v1/imports/{id}/process", headers=auth())
+        assert response.status_code == 422
+        assert response.json()["error"]["details"]["issues"][0]["row"] == 2
+        assert env["records"][id]["status"] == "failed"
+        assert env["derived"]["financial_lines"] == []
 
 
 @pytest.mark.parametrize("kind", ["budget", "actual", "cash"])

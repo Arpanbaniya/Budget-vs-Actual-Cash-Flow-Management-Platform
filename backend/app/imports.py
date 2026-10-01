@@ -8,11 +8,14 @@ from typing import Literal
 from urllib.parse import parse_qs, urlsplit
 from uuid import UUID, uuid4
 
+import httpx
 from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, ConfigDict, Field
+from starlette.concurrency import run_in_threadpool
 
 from app.companies import CompanyStore, Store
 from app.errors import ApiError
+from app.import_parser import ImportValidationError, parse_import
 
 MAX_FILE_BYTES = 5 * 1024 * 1024
 BUCKET = "fpna-imports"
@@ -54,6 +57,8 @@ class ImportMetadata(BaseModel):
     created_at: datetime
     updated_at: datetime
     processed_at: datetime | None = None
+    validation_errors: list[dict] = Field(default_factory=list)
+    warnings: list[dict] = Field(default_factory=list)
 
 
 class UploadInstructions(BaseModel):
@@ -246,6 +251,95 @@ async def list_imports(
 @router.get("/imports/{import_id}", response_model=ImportMetadata)
 async def get_import(import_id: UUID, store: Store) -> ImportMetadata:
     return await owned_import(store, import_id)
+
+
+@router.post("/imports/{import_id}/process")
+async def process_import(import_id: UUID, store: Store) -> dict:
+    record = await owned_import(store, import_id)
+    token = str(uuid4())
+    claim = await store.request(
+        "POST",
+        "rest/v1/rpc/claim_import",
+        json={
+            "p_import_id": str(import_id),
+            "p_token": token,
+        },
+    )
+    if not claim.json():
+        raise ApiError(
+            409, "IMPORT_STATE_CONFLICT", "Import cannot be processed in its current state."
+        )
+    try:
+        contents = bytearray()
+        async with store.client.stream(
+            "GET", f"storage/v1/object/authenticated/{BUCKET}/{record.storage_path}"
+        ) as response:
+            if not response.is_success:
+                raise ApiError(503, "UPLOAD_UNAVAILABLE", "The stored file could not be read.")
+            async for chunk in response.aiter_bytes():
+                contents.extend(chunk)
+                if len(contents) > MAX_FILE_BYTES:
+                    raise ApiError(413, "FILE_TOO_LARGE", "The stored file exceeds 5 MB.")
+        if len(contents) != record.size_bytes:
+            raise ApiError(422, "UPLOAD_SIZE_MISMATCH", "The stored file size has changed.")
+        parsed = await run_in_threadpool(
+            parse_import, bytes(contents), record.filename, record.kind
+        )
+        result = await store.request(
+            "POST",
+            "rest/v1/rpc/commit_import_rows",
+            json={
+                "p_import_id": str(import_id),
+                "p_token": token,
+                "p_rows": parsed.rows,
+                "p_warnings": parsed.warnings,
+            },
+        )
+        if not result.json():
+            raise ApiError(409, "IMPORT_STATE_CONFLICT", "Processing changed. Refresh the import.")
+        return {
+            "import_id": str(import_id),
+            "status": "processed",
+            "kind": record.kind,
+            "row_count": len(parsed.rows),
+            "warnings": parsed.warnings,
+        }
+    except (ApiError, ImportValidationError, httpx.RequestError) as error:
+        issues = error.issues if isinstance(error, ImportValidationError) else []
+        message = (
+            str(error)
+            if isinstance(error, ImportValidationError)
+            else (
+                error.message
+                if isinstance(error, ApiError)
+                else "File processing is temporarily unavailable."
+            )
+        )
+        try:
+            await store.request(
+                "PATCH",
+                "rest/v1/imports",
+                params={
+                    **import_scope(store, import_id),
+                    "status": "eq.processing",
+                    "processing_token": f"eq.{token}",
+                },
+                json={
+                    "status": "failed",
+                    "error_message": message,
+                    "validation_errors": issues,
+                    "processing_token": None,
+                    "processing_started_at": None,
+                    "updated_at": datetime.now(UTC).isoformat(),
+                },
+            )
+        except ApiError:
+            pass  # A ten-minute lease allows recovery if the database is unavailable.
+        if isinstance(error, ImportValidationError):
+            raise ApiError(422, "IMPORT_VALIDATION_FAILED", message, {"issues": issues}) from error
+        if isinstance(error, httpx.RequestError):
+            raise ApiError(503, "UPLOAD_UNAVAILABLE", message) from error
+        raise
 
 
 @router.delete("/imports/{import_id}", status_code=204)

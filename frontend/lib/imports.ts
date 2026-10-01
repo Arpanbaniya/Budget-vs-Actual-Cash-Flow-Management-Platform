@@ -27,6 +27,8 @@ export type ImportRecord = {
   created_at: string;
   updated_at: string;
   processed_at: string | null;
+  validation_errors?: { row: number; field: string; message: string }[];
+  warnings?: { row: number; field: string; message: string }[];
 };
 
 export type UploadReservation = {

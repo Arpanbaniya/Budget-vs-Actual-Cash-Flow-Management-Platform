@@ -133,6 +133,13 @@ beforeEach(() => {
       }
       const id = url.split("/")[4];
       const record = records.find((item) => item.id === id)!;
+      if (method === "GET" && record) return respond(record);
+      if (method === "POST" && url.endsWith("/process")) {
+        record.status = "processed";
+        record.row_count = 3;
+        record.warnings = [{ row: 2, field: "amount", message: "Signed financial amount retained." }];
+        return respond({ row_count: 3 });
+      }
       if (method === "POST" && url.endsWith("/complete")) {
         if (failComplete)
           return respond(
@@ -184,7 +191,7 @@ function chooseFile(
 
 async function upload() {
   fireEvent.submit(screen.getByRole("form", { name: "Upload import" }));
-  await screen.findByText(/File processing will be added next/);
+  await screen.findByText(/Choose Process file to validate its rows/);
 }
 
 test("reserve → direct file upload → complete; templates, filters, company selection, and delete confirmation", async () => {
@@ -269,7 +276,7 @@ test("failed file transfer remains reserved; retry uses the same reservation", a
   expect(calls.some((call) => call.url.endsWith("/complete"))).toBe(false);
   failUpload = false;
   fireEvent.click(screen.getByRole("button", { name: "Retry file upload" }));
-  await screen.findByText(/File processing will be added next/);
+  await screen.findByText(/Choose Process file to validate its rows/);
   expect(calls.filter((call) => call.url.endsWith("/reserve"))).toHaveLength(1);
   expect(records[0].status).toBe("uploaded");
 });
@@ -285,7 +292,7 @@ test("completion failure can be retried without transferring the file again", as
   fireEvent.click(
     screen.getByRole("button", { name: "Confirm stored upload" }),
   );
-  await screen.findByText(/File processing will be added next/);
+  await screen.findByText(/Choose Process file to validate its rows/);
   expect(calls.filter((call) => call.method === "PUT")).toHaveLength(1);
   expect(
     screen.queryByRole("button", { name: "Retry file upload" }),
@@ -354,3 +361,15 @@ test("signed upload destination must match the configured project and reserved o
   ).rejects.toThrow("upload link is invalid");
   expect(calls).toHaveLength(0);
 });
+
+test("processing shows row count and warnings after refreshing metadata", async () => {
+  await openWorkspace();
+  chooseFile();
+  fireEvent.submit(screen.getByRole("form", { name: "Upload import" }));
+  await screen.findByRole("button", { name: "Process file" });
+  fireEvent.click(screen.getByRole("button", { name: "Process file" }));
+  await screen.findByText("Rows: 3");
+  await screen.findByText("Row 2 · amount: Signed financial amount retained.");
+  expect(screen.queryByRole("button", { name: "Process file" })).toBeNull();
+});
+
