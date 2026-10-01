@@ -27,6 +27,10 @@ Phase 11: commit `7b1cab7`, production and CI success, 119 backend and 18 fronte
 
 Phase 12 adds cached fact-backed insights, optional Groq prioritization, and
 deterministic fallback for missing credentials and provider failures.
+Phase 12: commit `e301840`, production Ready and CI success, 129 backend and 19 frontend tests.
+
+Phase 13 adds formatted, formula-safe eight-sheet Excel reports, private storage,
+five-minute signed downloads, status metadata, and report management.
 
 The user's single-project deployment requirement applies throughout: Next.js and FastAPI
 remain services of `flow-forecast`, at https://flow-forecast.vercel.app/.

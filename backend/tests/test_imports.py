@@ -43,6 +43,7 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
     cash_balances = []
     scenario_rows = []
     analyses = []
+    reports = []
     calls: list[httpx.Request] = []
     failures: dict[str, int] = {}
     controls: dict[str, object] = {}
@@ -145,12 +146,21 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
             selected = [entry for entry in selected if start <= entry["period"] <= end]
             offset = int(request.url.params.get("offset", 0))
             return httpx.Response(200, json=selected[offset : offset + 1000])
-        if path in {"/rest/v1/cash_balances", "/rest/v1/cash_items", "/rest/v1/scenarios"}:
+        if path in {
+            "/rest/v1/cash_balances",
+            "/rest/v1/cash_items",
+            "/rest/v1/scenarios",
+            "/rest/v1/reports",
+        }:
             table = path.rsplit("/", 1)[-1]
             entries = (
                 cash_balances
                 if table == "cash_balances"
-                else (scenario_rows if table == "scenarios" else derived["cash_items"])
+                else (
+                    scenario_rows
+                    if table == "scenarios"
+                    else (reports if table == "reports" else derived["cash_items"])
+                )
             )
             if request.method == "POST":
                 body = json.loads(request.content)
@@ -194,12 +204,14 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
                     "cash_balances": "balance_date",
                     "cash_items": "expected_date",
                     "scenarios": "created_at",
+                    "reports": "created_at",
                 }[table]
                 selected.sort(
                     key=lambda row: (row[field], row["id"]), reverse=table == "cash_balances"
                 )
                 offset = int(request.url.params.get("offset", 0))
-                return httpx.Response(200, json=selected[offset : offset + 1000])
+                limit = int(request.url.params.get("limit", 1000))
+                return httpx.Response(200, json=selected[offset : offset + limit])
             if request.method == "PATCH":
                 for row in selected:
                     row.update(json.loads(request.content))
@@ -228,6 +240,29 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
                 )
             return httpx.Response(200, json=[row])
         download = "/storage/v1/object/authenticated/fpna-imports/"
+        if path.startswith("/storage/v1/object/fpna-reports/"):
+            assert request.method == "POST"
+            key = path.removeprefix("/storage/v1/object/fpna-reports/")
+            assert key.startswith(f"{owner}/")
+            objects[key] = request.content
+            return httpx.Response(200, json={"Key": key})
+        if path.startswith("/storage/v1/object/sign/fpna-reports/"):
+            key = path.removeprefix("/storage/v1/object/sign/fpna-reports/")
+            assert key.startswith(f"{owner}/")
+            assert json.loads(request.content) == {"expiresIn": 300}
+            return httpx.Response(
+                200,
+                json={
+                    "signedURL": controls.get("report_signed_url")
+                    or f"/object/sign/fpna-reports/{key}?token=mock-download"
+                },
+            )
+        if path == "/storage/v1/object/fpna-reports":
+            assert request.method == "DELETE"
+            for key in json.loads(request.content)["prefixes"]:
+                assert key.startswith(f"{owner}/")
+                objects.pop(key, None)
+            return httpx.Response(200, json=[])
         if path.startswith(download):
             key = path.removeprefix(download)
             assert key.startswith(f"{owner}/")
@@ -275,6 +310,7 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
         "cash_balances": cash_balances,
         "scenarios": scenario_rows,
         "companies": companies,
+        "reports": reports,
     }
 
 
