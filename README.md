@@ -107,7 +107,7 @@ pnpm build
 GitHub Actions runs on pull requests and pushes to `main`. Tests mock Supabase and
 Groq; they require no production credentials or live provider calls. The committed
 pnpm lockfile is the frontend installation source. Current regression coverage:
-148 backend tests and 21 frontend tests.
+153 backend tests and 21 frontend tests.
 
 ## Screenshots
 

@@ -66,6 +66,10 @@ Frontend lint, typecheck, all 21 tests, and the optimized build passed. Live
 `/dashboard` redirects an unauthenticated browser to `/login`, which renders
 configured email/password fields without console warnings or errors. Phase 17's
 authenticated acceptance checks are still pending; Phase 18 has not started.
+Phase 17 deployment: commit `0a8411d`, Vercel production and both CI jobs success.
+The updated landing page is visible in production; login/signup render without
+console errors, and all nine protected workspace pages redirect signed-out users
+to login. Email confirmation is enabled and anonymous sign-in is disabled.
 
 The user's single-project deployment requirement applies throughout: Next.js and FastAPI
 remain services of `flow-forecast`, at https://flow-forecast.vercel.app/.
