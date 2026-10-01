@@ -47,5 +47,13 @@ All local gates passed: Ruff, 148 backend tests, frontend lint/typecheck,
 21 frontend tests, and an optimized Next.js build. Demo calculations are checked
 by an automated test using the shipped samples.
 
+Phase 15: commit `9175f44`, production and both CI jobs success.
+
+Phase 16 finalizes the backend's production environment in the existing Services
+project: explicit frontend origin, deterministic AI provider, model/timeout,
+logging level, and a validated 1–5 MB import limit enforced throughout uploads.
+Python 3.12 and the FastAPI entry point are pinned; Supabase settings remain private.
+Local checks: Ruff and 153 backend tests passed.
+
 The user's single-project deployment requirement applies throughout: Next.js and FastAPI
 remain services of `flow-forecast`, at https://flow-forecast.vercel.app/.

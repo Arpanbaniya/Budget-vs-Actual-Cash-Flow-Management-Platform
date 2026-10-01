@@ -331,6 +331,21 @@ def reserve(env, **changes):
     )
 
 
+def test_lower_import_limit_applies_to_reservation_completion_and_stream(imports_api):
+    env = imports_api
+    size = 2 * 1024 * 1024
+    reservation = reserve(env, size_bytes=size).json()
+    import_id = reservation["import_id"]
+    env["objects"][reservation["storage_path"]] = {"size": size}
+    env["client"].app.state.settings.max_import_mb = 1
+    assert reserve(env, size_bytes=size).status_code == 413
+    assert env["client"].post(f"/api/v1/imports/{import_id}/complete", headers=auth()).status_code == 413
+    env["records"][import_id]["status"] = "uploaded"
+    env["controls"]["file_bytes"] = b"x" * size
+    assert env["client"].post(f"/api/v1/imports/{import_id}/process", headers=auth()).status_code == 413
+    assert env["records"][import_id]["status"] == "failed"
+
+
 def test_process_is_atomic_and_not_repeatable(imports_api):
     env = imports_api
     data = b"period,department,account_code,account_name,account_type,amount\n2026-10,Sales,001,Sales,revenue,123.45\n"

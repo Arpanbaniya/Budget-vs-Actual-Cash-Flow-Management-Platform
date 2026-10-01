@@ -17,6 +17,7 @@ class Settings(BaseModel):
     groq_api_key: SecretStr | None = Field(default=None, repr=False)
     groq_model: str = Field(default="llama-3.3-70b-versatile", min_length=1, max_length=200)
     ai_timeout_seconds: float = Field(default=20, ge=1, le=60, allow_inf_nan=False)
+    max_import_mb: int = Field(default=5, ge=1, le=5, strict=True)
 
     @field_validator("frontend_origins")
     @classmethod
@@ -49,9 +50,17 @@ class Settings(BaseModel):
         if self.supabase_url:
             parsed = urlsplit(self.supabase_url)
             if (
-                parsed.scheme != "https"
-                and not (parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1"})
-            ) or not parsed.hostname or parsed.path not in {"", "/"} or parsed.query or parsed.fragment:
+                (
+                    parsed.scheme != "https"
+                    and not (
+                        parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1"}
+                    )
+                )
+                or not parsed.hostname
+                or parsed.path not in {"", "/"}
+                or parsed.query
+                or parsed.fragment
+            ):
                 raise ValueError("SUPABASE_URL must be an HTTPS origin (or local HTTP origin)")
         return self
 
@@ -71,4 +80,5 @@ class Settings(BaseModel):
             groq_api_key=os.getenv("GROQ_API_KEY") or None,
             groq_model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
             ai_timeout_seconds=float(os.getenv("AI_TIMEOUT_SECONDS", "20")),
+            max_import_mb=int(os.getenv("MAX_IMPORT_MB", "5")),
         )

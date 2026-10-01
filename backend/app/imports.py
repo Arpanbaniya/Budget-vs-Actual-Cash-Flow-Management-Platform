@@ -9,7 +9,7 @@ from urllib.parse import parse_qs, urlsplit
 from uuid import UUID, uuid4
 
 import httpx
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.concurrency import run_in_threadpool
 
@@ -73,13 +73,13 @@ class Reservation(BaseModel):
     upload: UploadInstructions
 
 
-def upload_filename(payload: ReserveImport) -> tuple[str, str]:
+def upload_filename(payload: ReserveImport, max_bytes: int = MAX_FILE_BYTES) -> tuple[str, str]:
     name = payload.filename.replace("\\", "/").rsplit("/", 1)[-1]
     extension = PurePosixPath(name).suffix.lower()
     if extension not in MIME_TYPES:
         raise ApiError(422, "FILE_TYPE_INVALID", "Choose a .csv or .xlsx file.")
-    if payload.size_bytes > MAX_FILE_BYTES:
-        raise ApiError(413, "FILE_TOO_LARGE", "The file must be 5 MB or smaller.")
+    if payload.size_bytes > max_bytes:
+        raise ApiError(413, "FILE_TOO_LARGE", "The file exceeds the configured import size limit.")
     accepted = {MIME_TYPES[extension], "", "application/octet-stream"}
     if extension == ".csv":
         accepted.update({"application/csv", "text/plain", "application/vnd.ms-excel"})
@@ -117,9 +117,13 @@ async def owned_import(store: CompanyStore, import_id: UUID) -> ImportMetadata:
 
 
 @router.post("/companies/{company_id}/imports/reserve", response_model=Reservation, status_code=201)
-async def reserve_import(company_id: UUID, payload: ReserveImport, store: Store) -> Reservation:
+async def reserve_import(
+    company_id: UUID, payload: ReserveImport, request: Request, store: Store
+) -> Reservation:
     await store.get(company_id)
-    filename, mime_type = upload_filename(payload)
+    filename, mime_type = upload_filename(
+        payload, request.app.state.settings.max_import_mb * 1024 * 1024
+    )
     import_id = uuid4()
     path = f"{store.user.user_id}/{company_id}/{import_id}/{filename}"
     await store.request(
@@ -182,7 +186,7 @@ async def reserve_import(company_id: UUID, payload: ReserveImport, store: Store)
 
 
 @router.post("/imports/{import_id}/complete", response_model=ImportMetadata)
-async def complete_import(import_id: UUID, store: Store) -> ImportMetadata:
+async def complete_import(import_id: UUID, request: Request, store: Store) -> ImportMetadata:
     record = await owned_import(store, import_id)
     if record.status != "reserved":
         raise ApiError(409, "IMPORT_STATE_CONFLICT", "Only a reserved import can be completed.")
@@ -202,8 +206,10 @@ async def complete_import(import_id: UUID, store: Store) -> ImportMetadata:
     size = info.get("size")
     if not isinstance(size, int) or isinstance(size, bool) or size < 0:
         raise ApiError(503, "UPLOAD_UNAVAILABLE", "The uploaded file size could not be verified.")
-    if size > MAX_FILE_BYTES:
-        raise ApiError(413, "FILE_TOO_LARGE", "The uploaded file exceeds the 5 MB limit.")
+    if size > request.app.state.settings.max_import_mb * 1024 * 1024:
+        raise ApiError(
+            413, "FILE_TOO_LARGE", "The uploaded file exceeds the configured import size limit."
+        )
     if size != record.size_bytes:
         raise ApiError(
             422, "UPLOAD_SIZE_MISMATCH", "The uploaded size differs from the reserved file."
@@ -256,7 +262,7 @@ async def get_import(import_id: UUID, store: Store) -> ImportMetadata:
 
 
 @router.post("/imports/{import_id}/process")
-async def process_import(import_id: UUID, store: Store) -> dict:
+async def process_import(import_id: UUID, request: Request, store: Store) -> dict:
     record = await owned_import(store, import_id)
     token = str(uuid4())
     claim = await store.request(
@@ -280,8 +286,12 @@ async def process_import(import_id: UUID, store: Store) -> dict:
                 raise ApiError(503, "UPLOAD_UNAVAILABLE", "The stored file could not be read.")
             async for chunk in response.aiter_bytes():
                 contents.extend(chunk)
-                if len(contents) > MAX_FILE_BYTES:
-                    raise ApiError(413, "FILE_TOO_LARGE", "The stored file exceeds 5 MB.")
+                if len(contents) > request.app.state.settings.max_import_mb * 1024 * 1024:
+                    raise ApiError(
+                        413,
+                        "FILE_TOO_LARGE",
+                        "The stored file exceeds the configured import size limit.",
+                    )
         if len(contents) != record.size_bytes:
             raise ApiError(422, "UPLOAD_SIZE_MISMATCH", "The stored file size has changed.")
         parsed = await run_in_threadpool(

@@ -11,6 +11,18 @@ from app.main import create_app
 from app.structured_logging import JsonFormatter
 
 
+@pytest.mark.parametrize("value", ["0", "6", "1.5"])
+def test_import_limit_cannot_exceed_hard_ceiling(monkeypatch, value):
+    monkeypatch.setenv("MAX_IMPORT_MB", value)
+    with pytest.raises(ValueError):
+        Settings.from_environment()
+
+
+def test_import_limit_from_environment(monkeypatch):
+    monkeypatch.setenv("MAX_IMPORT_MB", "2")
+    assert Settings.from_environment().max_import_mb == 2
+
+
 def test_cors_uses_only_configured_origins(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("FRONTEND_ORIGINS", "https://flow-forecast.vercel.app")
     client = TestClient(create_app())

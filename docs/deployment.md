@@ -24,9 +24,11 @@ plan's separate-project deployment examples. Do not create another API project.
 | GROQ_API_KEY | Server-only optional secret; never NEXT_PUBLIC_* or committed |
 | GROQ_MODEL | Server: llama-3.3-70b-versatile by default |
 | AI_TIMEOUT_SECONDS | Server: 20 by default; 1–60 |
+| MAX_IMPORT_MB | Server: 5 by default; integer 1–5 |
 
-The application currently enforces a hard five MB import limit. Backend deployment
-verification will record any additional configurable import limit explicitly.
+The application enforces the configured import limit at reservation, completion,
+and streamed processing, with a hard maximum of five MB. Lowering the limit can
+reject an earlier reservation; its visible record can be removed and re-uploaded.
 Changing public settings requires a rebuild. Changing server settings also needs a
 new deployment to take effect. Keep secrets out of screenshots, logs, Git, and
 client bundles. Deterministic commentary works without Groq credentials.
@@ -57,5 +59,10 @@ another account. This workspace's CLI account may differ from the project owner;
 Git integration is the established deployment path.
 
 Phases 16–18 record final production configuration and smoke-test results separately.
+Phase 16 production settings are explicit: `AI_PROVIDER=none`,
+`GROQ_MODEL=llama-3.3-70b-versatile`, `AI_TIMEOUT_SECONDS=20`, `MAX_IMPORT_MB=5`,
+`LOG_LEVEL=INFO`, and `FRONTEND_ORIGINS=https://flow-forecast.vercel.app`.
+The existing four Supabase server/public variables are production-scoped.
+No Groq key has been supplied; optional live Groq execution is not verified.
 Before authenticated production verification is complete, local synthetic browser
 checks and unit tests must not be described as proof of the live end-to-end flow.
