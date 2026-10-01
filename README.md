@@ -9,9 +9,10 @@ comparison, management commentary, and private Excel reports into one workspace.
 [Open Flow & Forecast](https://flow-forecast.vercel.app/)
 
 One GitHub repository and one Vercel Services project deploy the Next.js frontend
-and FastAPI backend on the same domain. Phases 0–16 are implemented and deployed.
-The authenticated production smoke test is tracked separately; test counts and
-phase commits are in [implementation progress](docs/phases.md).
+and FastAPI backend on the same domain. Phases 0–17 are implemented and deployed;
+the remaining production import-to-report checks are tracked in the
+[implementation audit](docs/implementation-audit.md) and
+[implementation progress](docs/phases.md).
 
 ## Features
 
@@ -85,7 +86,8 @@ forward earlier cash items. Missing budget/actual amounts are shown as zero and 
 
 ## Groq and fallback
 
-`AI_PROVIDER=none` is the default and works without a key. Optional Groq mode uses
+`AI_PROVIDER=none` is the local default and works without a key. Production uses
+Groq mode with a server-only key. Optional Groq mode uses
 server-only `GROQ_API_KEY`, configurable `GROQ_MODEL`, and a bounded timeout.
 Groq prioritizes calculated facts and authored review actions. It cannot introduce
 new figures or claimed causes. Missing keys, invalid output, timeouts, and rate

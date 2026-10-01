@@ -1,6 +1,6 @@
 # Implementation and working-condition audit
 
-Audit date: October 1, 2026. Reviewed commit: `0369f315ce5797b8b7af11ac0058871ecbcf492f`.
+Audit date: October 1, 2026. Reviewed commit: `9d6033a0859503848819081357e399bef71541df`.
 
 Specification: `BUDGET_ACTUAL_CASHFLOW_CODEX_END_TO_END_PLAN.md`.
 The user's subsequent requirement for one Vercel project overrides the plan's
@@ -10,12 +10,12 @@ authorization to run its embedded implementation prompts.
 ## Verdict
 
 **The core application is implemented, passes its automated checks, and is deployed.
-It is not yet fully complete against the plan or verified end to end in production.**
+It is working for authenticated navigation and company setup, but it is not yet
+fully verified end to end against the plan.**
 
-The remaining items include public-signup email configuration,
-live Groq configuration/verification, and authenticated production acceptance tests.
-Passing tests with mocked Supabase and Groq services does not prove the complete
-production import-to-report flow.
+The remaining items include public-signup email configuration and the
+import-to-report production acceptance flow. Passing tests with mocked Supabase
+and Groq services does not prove that complete production workflow.
 
 ## Confirmed gaps
 
@@ -27,30 +27,31 @@ production import-to-report flow.
    Supabase's default sender only delivers to project-team addresses. Existing
    confirmed accounts may still log in; successful login was not exercised here.
    See [Supabase's SMTP restrictions](https://supabase.com/docs/guides/auth/auth-smtp).
-3. **Groq is implemented but disabled in production.** Production uses
-   `AI_PROVIDER=none`; deterministic commentary is the configured behavior.
-   Groq success/failure handling is covered by mocks, not a live provider call.
-   Enabling it requires a server-side key and the provider setting, followed by
-   deployment and a live test. No key was requested or exposed during this audit.
-4. **Phase 17 authenticated checks and Phase 18 remain incomplete.** The Codex
-   browser is still at the login form with no confirmed session available.
-   Live company CRUD, three import/process flows, finance results, scenarios,
-   insight output, private report generation/download, cleanup, and isolation
-   between two actual users have not been verified as one production workflow.
-   This is a verification gap, not evidence that all those features are broken.
+3. **The Groq production configuration is present, but fact-backed Groq output is
+   not yet verified.** Production has `AI_PROVIDER=groq` and a server-only
+   `GROQ_API_KEY`; the latest production deployment is Ready. An authenticated
+   insight request with an empty company returned the safe deterministic fallback,
+   which is expected without imported facts. A successful provider response still
+   requires a completed import flow.
+4. **Phase 18 remains incomplete.** Authenticated login, company creation, protected
+   workspace rendering, and the empty-data insight fallback were verified with the
+   supplied account. The browser file chooser did not accept the shipped CSVs in
+   this run, so real import processing, populated finance results, report
+   generation/download, cleanup, and two-user isolation remain unverified. This is
+   a verification gap, not evidence that those features are broken.
 
 ## Fresh verification results
 
 | Check | Result |
 | --- | --- |
 | Backend Ruff | Passed |
-| Backend pytest | 153 passed |
+| Backend pytest | 154 passed |
 | Frontend ESLint | Passed |
 | Frontend TypeScript | Passed |
 | Frontend Vitest | 21 passed across 11 files |
 | Next.js optimized production build | Passed |
 | Documented API operations vs application OpenAPI | All 35 method/path combinations present |
-| GitHub Actions for reviewed commit | Success; run `36875416122` |
+| GitHub Actions for reviewed commit | Success; run `36886293789` |
 | Vercel status for reviewed commit | Success |
 | Live homepage | HTTP 200 |
 | Live backend health | HTTP 200, `{"status":"ok"}` |
@@ -60,7 +61,10 @@ production import-to-report flow.
 | Unauthenticated dashboard navigation | Redirected to `/login` |
 | CORS preflight from production frontend | HTTP 200 and exact allowed origin |
 | CORS preflight from another origin | HTTP 400, no allowed-origin header |
-| Current browser login form | Renders; no authenticated session available |
+| Authenticated production login | Passed with the supplied account |
+| Authenticated company setup | Created and selected `Phase 17 Demo` |
+| Protected workspace pages | Variance, cash, forecast, scenarios, insights, and reports rendered |
+| Empty-data production insight | Safe deterministic fallback rendered; no console errors |
 | Current Supabase custom SMTP | Disabled |
 
 The only backend test warning was a dependency deprecation warning concerning
@@ -72,21 +76,21 @@ Starlette's HTTPX test client. It did not fail tests.
 | --- | --- | --- |
 | 0–1: scope and skeleton | Monorepo, Next.js, FastAPI, configuration, logging, errors, test setup | Present and building |
 | 2: data/security/storage | Eight-table schema, indexes, CRUD RLS, composite ownership FKs, two private buckets, templates | Earlier live inspection recorded in SECURITY.md; live two-user behavior still pending |
-| 3: authentication | Signup/login/logout, SSR cookies, refresh, bearer validation, protected layout | Public signup email configuration and successful production login remain open |
-| 4: companies | Five CRUD API operations, selector and settings UI | Covered by mocks; authenticated live CRUD pending |
+| 3: authentication | Signup/login/logout, SSR cookies, refresh, bearer validation, protected layout | Public signup email configuration remains open; supplied-account login passed |
+| 4: companies | Five CRUD API operations, selector and settings UI | Authenticated create/select passed; full CRUD remains pending |
 | 5–6: imports | Signed direct upload, completion, bounded parser, row errors, transactional processing and retry | Real production upload/process not yet exercised |
 | 7: variance | Decimal arithmetic, favorability, zero-budget handling, profit, filters, tables/charts | Core calculation tests pass; percentage representation differs as noted below |
 | 8: cash records | Balance/item CRUD, date conflict handling, filtering and pagination | Authenticated live CRUD pending |
 | 9: forecasts | Opening snapshot, 1–26 weeks, roll-forward, threshold detection | Hand-calculated tests pass; live flow pending |
 | 10: scenarios | CRUD, planned-only changes, delays, base/scenario comparison | Rule tests pass; live flow pending |
 | 11: dashboard | Shared services, cards, account variance, monthly trend, cash charts, missing-data states | Authenticated live verification pending |
-| 12: insights | Fact pack, private cache, Groq provider, deterministic fallback | Provider is disabled in production; real Groq request pending |
+| 12: insights | Fact pack, private cache, Groq provider, deterministic fallback | Groq is configured; fact-backed provider response remains pending real imports |
 | 13: Excel | Eight sheets, formatting, safe cells, private storage, signed downloads, metadata | Workbook/mock tests pass; real generation/download pending |
 | 14: hardening | Ownership, validation, private paths, bounds, safe errors and output, retry controls | Earlier live policy inspection plus automated tests; real two-user isolation pending |
 | 15: CI/docs | CI gates, READMEs, methods, sample files and screenshot placeholders | Phase 18 results and authenticated screenshots not yet available |
 | 16: backend deployment | Existing Vercel Services project, Python pin, production settings, live API checks | Passed |
-| 17: frontend deployment | Deployed build, same-origin routing, Supabase URLs and protected redirects | Successful login and authenticated FastAPI calls pending |
-| 18: production smoke test | Demo fixtures and expected results exist | Not completed |
+| 17: frontend deployment | Deployed build, same-origin routing, Supabase URLs and protected redirects | Login, company setup, protected navigation, and empty-data insight fallback passed |
+| 18: production smoke test | Demo fixtures and expected results exist | Import/file upload, populated finance flow, report download, cleanup, and isolation pending |
 
 ## Documented differences from the literal specification
 
@@ -114,14 +118,15 @@ The earlier production audit recorded all eight tables with ownership RLS, both
 private buckets, and invoker-only import functions. This audit reviewed their SQL
 and tests; it did not create two new users or mutate production data to retest RLS.
 
-To meet the complete definition of done: configure SMTP for public signup;
-finish authenticated Phase 17 checks;
-then run Phase 18 sequentially, including real imports, report download, two-user
-isolation, and cleanup. Enable and test Groq if the checklist's live-Groq item is
-required; deterministic mode is already the configured fallback.
+To meet the complete definition of done: configure SMTP for public signup, then
+run Phase 18 sequentially with real imports, report download, two-user isolation,
+and cleanup. The Groq key and provider setting are already configured; test the
+provider after imported facts exist.
 
 Production frontend: https://flow-forecast.vercel.app/
 
 Production backend origin: https://flow-forecast.vercel.app (API prefix `/api/v1`).
 
-No application code or production settings were changed by this audit.
+The production smoke test created `Phase 17 Demo` under the supplied account. It
+was left in place because deleting a production company is permanent and requires
+confirmation at the deletion action.

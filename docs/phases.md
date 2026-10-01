@@ -70,10 +70,19 @@ Phase 17 deployment: commit `0a8411d`, Vercel production and both CI jobs succes
 The updated landing page is visible in production; login/signup render without
 console errors, and all nine protected workspace pages redirect signed-out users
 to login. Email confirmation is enabled and anonymous sign-in is disabled.
+The supplied account then logged in successfully, created `Phase 17 Demo`, and
+rendered the protected variance, cash, forecast, scenarios, insights, and reports
+pages. A no-data insight request returned the deterministic fallback without
+browser console errors.
 
 Continuation audit fix: monthly revenue, expense, and operating-profit series are
 now calculated in the backend and rendered on the dashboard with exact-value rows
 and a visual trend. Local checks: 154 backend tests and 21 frontend tests passed.
+
+The latest continuation commit is `9d6033a`. Vercel production is Ready with
+`AI_PROVIDER=groq` and a server-only Groq key configured. Fact-backed Groq output,
+real CSV/XLSX processing, populated finance results, report download, cleanup, and
+two-user isolation still require the Phase 18 data workflow.
 
 The user's single-project deployment requirement applies throughout: Next.js and FastAPI
 remain services of `flow-forecast`, at https://flow-forecast.vercel.app/.
