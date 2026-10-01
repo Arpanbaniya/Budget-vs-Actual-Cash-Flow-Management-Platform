@@ -40,6 +40,28 @@ def test_hand_calculated_summary_and_unbudgeted():
     assert [row["label"] for row in result["top_unfavorable"]] == ["001", "003"]
 
 
+def test_monthly_series_contains_revenue_expenses_and_profit():
+    result = calculate_variance(
+        [
+            line("budget", "100", month="2026-09-01"),
+            line("actual", "90", month="2026-09-01"),
+            line("budget", "40", "cogs", month="2026-09-01"),
+            line("actual", "45", "cogs", month="2026-09-01"),
+        ]
+    )
+    assert result["monthly_series"] == [
+        {
+            "month": "2026-09",
+            "budget_revenue": Decimal(100),
+            "actual_revenue": Decimal(90),
+            "budget_expenses": Decimal(40),
+            "actual_expenses": Decimal(45),
+            "budget_profit": Decimal(60),
+            "actual_profit": Decimal(45),
+        }
+    ]
+
+
 def test_negative_budget_uses_absolute_denominator_and_decimal_precision():
     row = calculate_variance([line("budget", "-0.3"), line("actual", "-0.2")])["rows"][0]
     assert row["variance_amount"] == Decimal("0.1")

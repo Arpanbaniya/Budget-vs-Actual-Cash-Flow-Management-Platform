@@ -29,6 +29,14 @@ def favorability(variance: Decimal, income: bool) -> str:
 @money_precision
 def calculate_variance(lines: list[dict], group_by: Group = "account") -> dict:
     buckets = defaultdict(lambda: {"budget": Decimal(0), "actual": Decimal(0)})
+    monthly = defaultdict(
+        lambda: {
+            "budget_revenue": Decimal(0),
+            "actual_revenue": Decimal(0),
+            "budget_expenses": Decimal(0),
+            "actual_expenses": Decimal(0),
+        }
+    )
     summary = {
         f"{kind}_{category}": Decimal(0)
         for kind in ("budget", "actual")
@@ -48,6 +56,8 @@ def calculate_variance(lines: list[dict], group_by: Group = "account") -> dict:
         bucket[kind] += amount
         bucket["account_name"] = line["account_name"] if group_by == "account" else label
         summary[f"{kind}_{'revenue' if account_type in INCOME else 'expenses'}"] += amount
+        month = str(line["period"])[:7]
+        monthly[month][f"{kind}_{'revenue' if account_type in INCOME else 'expenses'}"] += amount
     for kind in ("budget", "actual"):
         summary[f"{kind}_operating_profit"] = (
             summary[f"{kind}_revenue"] - summary[f"{kind}_expenses"]
@@ -81,6 +91,15 @@ def calculate_variance(lines: list[dict], group_by: Group = "account") -> dict:
         "summary": summary,
         "rows": rows,
         "top_unfavorable": unfavorable,
+        "monthly_series": [
+            {
+                "month": month,
+                **values,
+                "budget_profit": values["budget_revenue"] - values["budget_expenses"],
+                "actual_profit": values["actual_revenue"] - values["actual_expenses"],
+            }
+            for month, values in sorted(monthly.items())
+        ],
         "has_data": bool(lines),
         "budget_row_count": sum(row["kind"] == "budget" for row in lines),
         "actual_row_count": sum(row["kind"] == "actual" for row in lines),

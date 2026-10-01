@@ -22,11 +22,21 @@ export type VarianceRow = {
   variance_label: string;
   favorability: string;
 };
+export type MonthlyVariance = {
+  month: string;
+  budget_revenue: string;
+  actual_revenue: string;
+  budget_expenses: string;
+  actual_expenses: string;
+  budget_profit: string;
+  actual_profit: string;
+};
 export type VarianceResult = {
   currency: string;
   summary: Record<string, string>;
   rows: VarianceRow[];
   top_unfavorable: VarianceRow[];
+  monthly_series: MonthlyVariance[];
   has_data: boolean;
   budget_row_count: number;
   actual_row_count: number;

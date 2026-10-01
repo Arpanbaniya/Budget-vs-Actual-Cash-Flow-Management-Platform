@@ -64,6 +64,7 @@ test("variance displays backend money, zero-budget label, and changes filters", 
               favorability: "unfavorable",
             },
           ],
+          monthly_series: [],
           top_unfavorable: [],
         };
     return new Response(JSON.stringify(body));

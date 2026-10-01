@@ -19,6 +19,7 @@ test("dashboard keeps financial summary visible when cash balance is missing", (
       budget_row_count: 0,
       actual_row_count: 0,
       rows: [],
+      monthly_series: [],
       top_unfavorable: [],
       summary: {
         actual_revenue: "90",

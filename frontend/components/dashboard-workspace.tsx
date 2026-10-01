@@ -19,6 +19,7 @@ import {
 import {
   VarianceSummary,
   VarianceTable,
+  type MonthlyVariance,
   type VarianceResult,
 } from "./variance-workspace";
 import type { Scenario } from "./scenario-workspace";
@@ -31,6 +32,58 @@ export type DashboardResult = {
   cash_forecast: ForecastResult | null;
   latest_cash: { amount: string; balance_date: string } | null;
 };
+
+export function MonthlyTrendChart({
+  rows,
+  currency,
+}: {
+  rows: MonthlyVariance[];
+  currency: string;
+}) {
+  const visible = rows.slice(0, 24);
+  const max = Math.max(
+    1,
+    ...visible.flatMap((row) => [
+      Math.abs(Number(row.actual_revenue)),
+      Math.abs(Number(row.actual_expenses)),
+      Math.abs(Number(row.actual_profit)),
+    ]),
+  );
+  return (
+    <section className={panelClass}>
+      <h2 className="text-xl font-semibold">Monthly revenue, expenses, and profit</h2>
+      <p className="mt-2 text-xs">Actual values are shown first; budget values follow each value.</p>
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr>{["Month", "Revenue", "Expenses", "Operating profit"].map((label) => <th key={label} className="border-b p-3">{label}</th>)}</tr>
+          </thead>
+          <tbody>
+            {visible.map((row) => (
+              <tr key={row.month}>
+                <th scope="row" className="border-b p-3">{row.month}</th>
+                <td className="border-b p-3">{money(row.actual_revenue, currency)} / {money(row.budget_revenue, currency)}</td>
+                <td className="border-b p-3">{money(row.actual_expenses, currency)} / {money(row.budget_expenses, currency)}</td>
+                <td className="border-b p-3">{money(row.actual_profit, currency)} / {money(row.budget_profit, currency)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <svg className="mt-5 w-full" role="img" aria-label="Monthly actual revenue, expenses, and operating profit" viewBox={`0 0 800 ${Math.max(70, visible.length * 30)}`}>
+        {visible.map((row, index) => (
+          <g key={`chart-${row.month}`}>
+            <text x="0" y={index * 30 + 18} fontSize="12">{row.month}</text>
+            {[row.actual_revenue, row.actual_expenses, row.actual_profit].map((value, item) => (
+              <rect key={item} x="120" y={index * 30 + item * 8} width={(Math.abs(Number(value)) / max) * 620} height="6" fill={["#164d3b", "#bb963f", "#6a9e78"][item]} />
+            ))}
+          </g>
+        ))}
+      </svg>
+      {rows.length > 24 && <p className="text-xs">Showing the first 24 months.</p>}
+    </section>
+  );
+}
 
 export function DashboardWorkspace({ userId }: { userId: string }) {
   return (
@@ -214,6 +267,7 @@ export function DashboardView({ data }: { data: DashboardResult }) {
       )}
       <VarianceSummary data={variance} />
       {variance.has_data && <BudgetChart rows={variance.rows} />}
+      {variance.monthly_series.length > 0 && <MonthlyTrendChart rows={variance.monthly_series} currency={data.currency} />}
       <section className={panelClass}>
         <h2 className="text-xl font-semibold">Top unfavorable variances</h2>
         {variance.top_unfavorable.length ? (

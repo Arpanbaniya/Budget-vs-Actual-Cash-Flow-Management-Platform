@@ -71,5 +71,9 @@ The updated landing page is visible in production; login/signup render without
 console errors, and all nine protected workspace pages redirect signed-out users
 to login. Email confirmation is enabled and anonymous sign-in is disabled.
 
+Continuation audit fix: monthly revenue, expense, and operating-profit series are
+now calculated in the backend and rendered on the dashboard with exact-value rows
+and a visual trend. Local checks: 154 backend tests and 21 frontend tests passed.
+
 The user's single-project deployment requirement applies throughout: Next.js and FastAPI
 remain services of `flow-forecast`, at https://flow-forecast.vercel.app/.
