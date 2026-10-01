@@ -18,7 +18,7 @@ export default async function WorkspaceLayout({
           </Link>
           <nav
             aria-label="Workspace"
-            className="flex gap-5 text-sm font-medium"
+            className="flex flex-wrap gap-5 text-sm font-medium"
           >
             <Link href="/dashboard" className="hover:underline">
               Dashboard
@@ -29,6 +29,7 @@ export default async function WorkspaceLayout({
             <Link href="/imports" className="hover:underline">
               Imports
             </Link>
+            <Link href="/variance" className="hover:underline">Variance</Link>
           </nav>
           <div className="flex flex-wrap items-center gap-4">
             {user.email && (

@@ -1,6 +1,6 @@
 # Flow & Forecast
 
-Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. **Phase 6 import processing** is implemented alongside authentication, company management, and direct private uploads. Signed-in users can upload and process budget, actual, and cash CSV/XLSX files, see row-numbered validation errors and warnings, and safely retry interrupted processing. Finance analysis belongs to later phases.
+Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. **Phase 7 variance analysis** is implemented alongside authentication, company management, and private CSV/XLSX imports. Users can process files, see row-numbered validation feedback, and analyze budget versus actual by account, department, or month with filters, profit summaries, favorability labels, and charts. See [variance methodology](docs/variance-methodology.md).
 
 ## Live app
 
@@ -65,4 +65,4 @@ Uploads go directly from the browser to the private `fpna-imports` bucket. FastA
 
 ## Current limitations
 
-Supabase's default email sender only sends confirmation email to members of the Supabase organization. Public signup needs a custom SMTP provider. There is no variance engine, cash forecast, scenario engine, AI commentary, or Excel reporting yet. Figures on the landing page are explicitly illustrative.
+Supabase's default email sender only sends confirmation email to members of the Supabase organization. Public signup needs a custom SMTP provider. Cash forecasting, scenarios, AI commentary, and Excel reporting belong to later phases. Figures on the landing page are explicitly illustrative.

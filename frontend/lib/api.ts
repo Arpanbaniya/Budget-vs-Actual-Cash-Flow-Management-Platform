@@ -44,8 +44,7 @@ export async function apiRequest<T>(
     if (
       response.status === 422 &&
       body?.error?.code === "REQUEST_INVALID" &&
-      path.startsWith("/companies") &&
-      !path.includes("/imports")
+      (path === "/companies" || /^\/companies\/[^/?]+$/.test(path))
     ) {
       throw new ApiRequestError(
         "Check the company name, three-letter currency, fiscal month, and nonnegative cash threshold.",

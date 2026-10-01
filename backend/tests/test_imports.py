@@ -110,6 +110,26 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
                             entry for entry in entries if entry["import_id"] != row["id"]
                         ]
                 return httpx.Response(200, json=selected)
+        if path == "/rest/v1/financial_lines":
+            assert request.url.params["user_id"] == f"eq.{owner}"
+            company_id = request.url.params["company_id"].removeprefix("eq.")
+            selected = [
+                entry
+                for entry in derived["financial_lines"]
+                if entry.get("company_id") == company_id
+                and entry.get("user_id") == owner
+                and records.get(entry["import_id"], {}).get("status") == "processed"
+            ]
+            for key in ("kind", "department", "account_type"):
+                if key in request.url.params:
+                    selected = [
+                        entry for entry in selected if request.url.params[key] == f"eq.{entry[key]}"
+                    ]
+            start, end = request.url.params["and"].strip("()").split(",")
+            start, end = start.removeprefix("period.gte."), end.removeprefix("period.lte.")
+            selected = [entry for entry in selected if start <= entry["period"] <= end]
+            offset = int(request.url.params.get("offset", 0))
+            return httpx.Response(200, json=selected[offset : offset + 1000])
         if path.startswith("/rest/v1/rpc/"):
             body = json.loads(request.content)
             row = records.get(body["p_import_id"])

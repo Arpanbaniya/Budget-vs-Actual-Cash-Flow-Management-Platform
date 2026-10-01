@@ -11,6 +11,7 @@ from app.config import Settings
 from app.errors import register_error_handlers
 from app.imports import router as imports_router
 from app.structured_logging import configure_logging
+from app.variance import router as variance_router
 
 
 def create_app() -> FastAPI:
@@ -33,6 +34,7 @@ def create_app() -> FastAPI:
     register_error_handlers(application)
     application.include_router(companies_router)
     application.include_router(imports_router)
+    application.include_router(variance_router)
 
     @application.middleware("http")
     async def log_request(request: Request, call_next: RequestResponseEndpoint) -> Response:
