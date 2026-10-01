@@ -1,5 +1,7 @@
 # Cash forecasting — Phase 9
 
+The forecast page is `/cash-forecast`; `/forecast` is also supported.
+
 GET `/api/v1/companies/{id}/cash-forecast?start_date=2026-10-01&weeks=13`
 supports 1–26 weeks, default 13. It requires an owned company and the latest balance
 dated on or before start_date. A missing balance returns 422 CASH_BALANCE_REQUIRED.

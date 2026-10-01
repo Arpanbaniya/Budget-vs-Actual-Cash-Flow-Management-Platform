@@ -35,7 +35,7 @@ export default async function WorkspaceLayout({
             <Link href="/cash" className="hover:underline">
               Cash
             </Link>
-            <Link href="/forecast" className="hover:underline">
+            <Link href="/cash-forecast" className="hover:underline">
               Forecast
             </Link>
           </nav>
