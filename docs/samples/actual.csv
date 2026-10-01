@@ -1,0 +1,4 @@
+period,department,account_code,account_name,account_type,amount
+2026-09,Sales,004000,Sales,revenue,90000
+2026-09,Operations,005000,Cost of goods,cogs,38000
+2026-09,Admin,006000,Administration,operating_expense,25000

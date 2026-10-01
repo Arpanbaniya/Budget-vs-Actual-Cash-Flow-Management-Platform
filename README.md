@@ -1,69 +1,139 @@
 # Flow & Forecast
 
-Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. **Phase 13 private Excel reporting** is implemented alongside authentication, company management, private CSV/XLSX imports, variance analysis, and cash records. Users can analyze budget versus actual and project weekly cash, minimum balances, and threshold breaches over 1–26 weeks (13 by default). Scenarios apply planned cash adjustments and collection delays, with base comparisons. Cached fact-backed commentary works without a Groq key; optional Groq prioritization has deterministic fallback. Users can generate eight-sheet private Excel reports with expiring download links. See [reports](docs/reports.md), [insights](docs/insights.md), [dashboard](docs/dashboard.md), [scenarios](docs/scenarios.md), [variance methodology](docs/variance-methodology.md), [cash records](docs/cash-records.md), and [forecast methodology](docs/cash-forecast-methodology.md).
+A budget-versus-actual and cash-flow management application for finance teams.
+It brings financial imports, variance analysis, a 13-week cash outlook, scenario
+comparison, management commentary, and private Excel reports into one workspace.
 
 ## Live app
 
-- [https://flow-forecast.vercel.app/](https://flow-forecast.vercel.app/)
+[Open Flow & Forecast](https://flow-forecast.vercel.app/)
 
-One Vercel Services project imports this GitHub repository and deploys both services from `main`.
+One GitHub repository and one Vercel Services project deploy the Next.js frontend
+and FastAPI backend on the same domain. Phases 0–14 are implemented and deployed.
+The authenticated production smoke test is tracked separately; test counts and
+phase commits are in [implementation progress](docs/phases.md).
 
-## Repository
+## Features
 
-- `frontend/` — Next.js 16, React 19, TypeScript, Tailwind CSS
-- `backend/` — FastAPI with authentication verification, company CRUD, and import upload lifecycle
-- `supabase/` — Phase 2 migrations, RLS, and private Storage policies
-- `docs/` — architecture, database, authentication, and deployment notes
-- `BUDGET_ACTUAL_CASHFLOW_CODEX_END_TO_END_PLAN.md` — full implementation specification
-- `BUDGET_ACTUAL_CASHFLOW_LEARNING_GUIDE.md` — finance and phase guide
+- Confirmed Supabase email/password authentication and a protected workspace.
+- Company settings: currency, fiscal-year start, and minimum cash threshold.
+- Private direct CSV/XLSX uploads, validation, transactional processing, and retry recovery.
+- Decimal-based budget/actual variance by account, department, or month.
+- Cash balances and manual/imported cash-item management.
+- Weekly cash forecasts, lowest balances, and threshold alerts; 13 weeks by default.
+- Planned-item scenarios with inflow/outflow adjustments and collection delays.
+- Dashboard cards, charts, top unfavorable variances, and useful missing-data states.
+- Cached management commentary, optional Groq prioritization, and deterministic fallback.
+- Eight-sheet private Excel reports with five-minute signed download links.
 
-## Local development
+## Architecture
+
+| Component | Technology | Responsibility |
+| --- | --- | --- |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind | Authentication, forms, charts, workspace |
+| Backend | Python 3.12, FastAPI, Pydantic, Decimal, openpyxl | Validation, finance calculations, insights, reports |
+| Database/Auth | Supabase PostgreSQL and Auth | Owned data, RLS, confirmed accounts |
+| Files | Private Supabase Storage | Imports and reports |
+| Deployment | One Vercel Services project | `/api/*` → backend; other paths → frontend |
+| CI | GitHub Actions | Backend lint/tests; frontend lint/types/tests/build |
+
+See [architecture](docs/architecture.md), [API contract](docs/api.md), and
+[database setup](docs/database.md). Finance calculations run before commentary.
+The backend uses the caller's JWT and publishable key; no service-role key is needed.
+
+## Local setup
+
+Requires Python 3.12, Node.js 22, pnpm 11.19.0, and a Supabase project with the
+[migrations](supabase/migrations/) applied in timestamp order.
 
 Frontend:
 
 ```powershell
 cd frontend
-pnpm install
+pnpm install --frozen-lockfile
+# Copy .env.example to .env.local and fill in your project's public settings.
 pnpm dev
 ```
 
-Backend (Python 3.12):
+Backend, in another terminal:
 
 ```powershell
 cd backend
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements-dev.txt
+# Copy .env.example to .env and load those values into your shell.
 uvicorn app.main:app --reload --no-access-log
 ```
 
-Then open `http://localhost:3000`. Add the local Supabase environment values described in [authentication setup](docs/auth.md) to use signup, login, and the private dashboard.
+The backend reads process environment variables; it does not automatically load
+`.env`. See [authentication setup](docs/auth.md) for the required values. Local
+frontend API requests use `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000`.
+Production leaves this setting empty to use the shared origin.
 
-## Checks
+## Demo imports and finance methods
+
+Start with [demo budget](docs/samples/budget.csv), [demo actual](docs/samples/actual.csv),
+and [demo cash](docs/samples/cash.csv). The [demo guide](docs/samples/README.md)
+contains opening cash, scenario settings, and expected results. Empty templates
+are available on the app and in `frontend/public/templates/`.
+
+Read [import formats](docs/import-formats.md) and [finance methodology](docs/finance-methodology.md)
+before importing. Multiple imports are additive; delete superseded imports to
+avoid double counting. An opening cash snapshot is used directly, without rolling
+forward earlier cash items. Missing budget/actual amounts are shown as zero and flagged.
+
+## Groq and fallback
+
+`AI_PROVIDER=none` is the default and works without a key. Optional Groq mode uses
+server-only `GROQ_API_KEY`, configurable `GROQ_MODEL`, and a bounded timeout.
+Groq prioritizes calculated facts and authored review actions. It cannot introduce
+new figures or claimed causes. Missing keys, invalid output, timeouts, and rate
+limits fall back to deterministic commentary. See [insights](docs/insights.md).
+
+## Checks and CI
 
 ```powershell
-cd frontend
+cd backend
+ruff check .
+python -m pytest -q
+cd ../frontend
 pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
-
-cd ../backend
-ruff check .
-pytest
 ```
+
+GitHub Actions runs on pull requests and pushes to `main`. Tests mock Supabase and
+Groq; they require no production credentials or live provider calls. The committed
+pnpm lockfile is the frontend installation source. Current regression coverage:
+148 backend tests and 21 frontend tests.
+
+## Screenshots
+
+Production screenshot placeholders will be replaced after the authenticated
+smoke test: dashboard, variance, cash forecast/scenario comparison, and report list.
+Local browser checks used explicitly labeled synthetic data. See
+[screenshot notes](docs/screenshots/README.md).
+
+## Security and limits
+
+Read [SECURITY.md](SECURITY.md) for ownership, private Storage, input bounds,
+logging, download links, deletion, and vulnerability reporting. [Excel reports](docs/reports.md)
+sanitize user text and retain amounts beyond Excel's numeric precision as text.
+
+Supabase's default confirmation sender restricts recipients; public signup needs
+custom SMTP. No Groq key is configured by this repository. Landing-page figures
+are illustrative. There is no background job worker, automatic orphan cleanup,
+application rate limiter, or shared-company collaboration. Imports are limited
+to five MB, 50,000 rows, and 64 columns; forecasts to 26 weeks; analysis reads to
+200,000 rows; reports to 100,000 source rows and 20 MB. Direct writes to your own
+Supabase data can bypass application validation. Reports read live data in several
+requests rather than one database snapshot.
 
 ## Deployment
 
-Import the repository once in Vercel with the repository root (`./`) and the Services preset. The root [vercel.json](vercel.json) routes `/api/*` to FastAPI and all other requests to Next.js. See [deployment notes](docs/deployment.md).
-
-Both Phase 2 database migrations are applied to the connected Supabase project; see [database notes](docs/database.md). The single Vercel project has the Phase 3 production environment variables; see [authentication setup](docs/auth.md).
-
-Phase 4 uses those same environment variables and existing tables. See [company management](docs/companies.md) for API examples, validation rules, and deletion behavior. Production requests use the shared Vercel origin; local browser requests use `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000`.
-
-Uploads go directly from the browser to the private `fpna-imports` bucket. FastAPI downloads stored files only when processing is requested. See [imports](docs/imports.md) for formats and recovery behavior. The Phase 6 migration adds transactional row persistence and processing leases and is applied to production.
-
-## Current limitations
-
-Supabase's default email sender only sends confirmation email to members of the Supabase organization. Public signup needs a custom SMTP provider. AI commentary and Excel reporting belong to later phases. Figures on the landing page are explicitly illustrative.
-
+The single project `flow-forecast` imports this repository's `main` branch using
+the root Services configuration. See [deployment](docs/deployment.md),
+[frontend setup](frontend/README.md), and [backend setup](backend/README.md).
+Keep secret keys and credentials out of Git and `NEXT_PUBLIC_*` variables.

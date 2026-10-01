@@ -5,9 +5,17 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -27,6 +35,10 @@ jobs:
 
   backend:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AI_PROVIDER: none
+      GROQ_API_KEY: ""
     defaults:
       run:
         working-directory: backend

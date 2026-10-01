@@ -1,0 +1,7 @@
+expected_date,description,category,direction,amount,status
+2026-10-02,Planned customer receipt,Receipts,inflow,50000,planned
+2026-10-05,Confirmed customer receipt,Receipts,inflow,20000,confirmed
+2026-10-06,Actual customer receipt,Receipts,inflow,5000,actual
+2026-10-07,Planned supplier payment,Suppliers,outflow,30000,planned
+2026-10-08,Confirmed supplier payment,Suppliers,outflow,40000,confirmed
+2026-10-10,Actual supplier payment,Suppliers,outflow,10000,actual

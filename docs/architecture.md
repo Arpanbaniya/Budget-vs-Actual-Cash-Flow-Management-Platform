@@ -1,13 +1,54 @@
-# Foundation architecture
+# Architecture
 
-The repository has two application services in one Vercel project. `frontend/` contains the Next.js App Router application. `backend/` contains the FastAPI application exported as `app` from `api/index.py`. The root `vercel.json` routes `/api/*` to FastAPI and all other paths to Next.js on one domain.
+The repository deploys two services inside one Vercel project. The root
+`vercel.json` routes `/api/*` to Python FastAPI and every other path to Next.js.
+The shared origin keeps production browser/API requests simple.
 
-The API has public `GET /api/v1/health`, protected `GET /api/v1/me`, and protected company CRUD endpoints. The shared production domain makes browser requests same-origin. CORS is validated from `FRONTEND_ORIGINS` for local GET/POST/PATCH/DELETE requests. `LOG_LEVEL` controls JSON request logs, which include only method, route template, and status. API errors use the shape `{ "error": { "code", "message", "details" } }`.
+```mermaid
+flowchart LR
+  Browser[Protected Next.js workspace] -->|Bearer JSON requests| API[FastAPI]
+  Browser -->|Signed direct upload| Storage[Private Supabase Storage]
+  API -->|Caller JWT| Auth[Supabase Auth]
+  API -->|Caller JWT and RLS| DB[PostgreSQL Data API]
+  API -->|Parse imports and store reports| Storage
+  API --> Finance[Decimal finance services]
+  Finance --> Facts[Computed fact pack]
+  Facts --> Fallback[Deterministic commentary]
+  Facts -->|Optional aggregate facts only| Groq[Groq prioritization]
+```
 
-The frontend has Supabase SSR/cookie auth utilities, a Next.js Proxy for session refresh, signup/login forms, and a dashboard protected by verified claims. FastAPI validates bearer access tokens against Supabase Auth. The flows require a linked Supabase project and environment values; see [auth setup](auth.md). `supabase/` holds Phase 2 migrations and private Storage policies.
+## Authentication and ownership
 
-Company management flows from the protected Next.js workspace to FastAPI, then to Supabase's Data API using the caller's JWT. The API sets `user_id` on creation and filters all other operations by verified user ID; RLS provides an additional ownership boundary. Cash thresholds use decimal values and are returned as strings to preserve precision. Company deletion discovers files only under the verified user's company prefix in both private buckets, removes their bytes through the Storage API, and then deletes the company row and its dependent records.
+Next.js server pages verify claims through Supabase SSR cookies; Proxy refreshes
+sessions. Client API requests read the current session and attach a bearer token.
+FastAPI asks Supabase Auth to verify that token. All data/Storage requests use the
+same caller JWT and publishable key. Owner filters, parent checks, RLS, private
+bucket policies, and composite foreign keys isolate users. No service-role key.
 
-Phase 5 imports follow browser → FastAPI reservation → direct browser PUT to a signed Supabase Storage URL → FastAPI completion. The API receives JSON metadata only. Completion reads private Storage object metadata, checks the actual size against the reservation and 5 MB limit, then conditionally changes `reserved` to `uploaded`. Import deletion removes the private object first and deletes the import row; foreign keys cascade its derived financial/cash rows. See [direct imports](imports.md).
+## Imports
 
-Later phases will add file parsing, deterministic finance services, optional Groq commentary, and Excel reports. The dashboard displays company settings and links to uploads.
+Reserve metadata → browser uploads directly using signed capability → complete
+verifies stored size → process claims a token/lease, downloads bounded private
+bytes, parses CSV/XLSX, and commits derived rows and status in one database
+transaction. Validation failure inserts no partial rows. Retries cannot add the
+same derived rows twice. Separate processed imports are additive.
+
+## Finance and reports
+
+Pure Decimal variance and forecast functions underpin all pages, dashboard,
+insights, and Excel reports. Scenarios copy and transform planned cash rows.
+Cash snapshots are used directly; no implicit roll-forward occurs. APIs serialize
+money as strings. Source/date/status rules are in [finance methodology](finance-methodology.md).
+
+Insights hash facts and parameters for private caching. Optional Groq selects
+existing fact/action IDs; the backend renders every figure. Provider failure falls
+back. Report generation uses openpyxl in a thread pool, uploads private XLSX bytes,
+records status, and creates five-minute signed URLs only on download requests.
+
+## Operational boundaries
+
+These are bounded synchronous request flows, not a job queue. Storage/database
+cleanup is retryable but not a shared transaction. Report reads are not one
+point-in-time snapshot. Tests use mocked upstream services; authenticated live
+checks are recorded separately. See [security](../SECURITY.md),
+[API](api.md), and [deployment](deployment.md).

@@ -1,14 +1,15 @@
 # Flow & Forecast API
 
-The FastAPI service provides public `GET /api/v1/health` and protected `GET /api/v1/me`. The latter validates a Supabase bearer access token with the project's Auth server. See [authentication setup](../docs/auth.md).
+Python 3.12 FastAPI service in the repository's single Vercel Services project.
+`api/index.py` exports `app` from `app.main`. Public routing shares the frontend's
+production domain. See [API contract](../docs/api.md).
 
-Phase 4 adds POST/GET `/api/v1/companies` and GET/PATCH/DELETE `/api/v1/companies/{company_id}`. `app/companies.py` validates settings and forwards the user's JWT and publishable key to Supabase's Data API. Reads, updates, and deletes explicitly filter by user ID, in addition to database RLS. Foreign companies return 404. Deletion removes private company Storage objects before cascading database records. See [company management](../docs/companies.md).
+The backend verifies Supabase bearer tokens, scopes requests to the owner, validates
+inputs, processes stored imports, calculates variance/cash/scenarios with Decimal,
+generates fact-backed commentary, and creates private Excel reports with openpyxl.
+It uses the caller's JWT and publishable key for Supabase; no service-role key.
 
-`app.main` creates the application. `api/index.py` exports it for Vercel. Runtime configuration reads `FRONTEND_ORIGINS` and `LOG_LEVEL`; see `.env.example`. The error helpers return `{ "error": { "code", "message", "details" } }`. JSON request logs include an allowlist of metadata and omit headers, request bodies, and query strings.
-
-## Local development
-
-Use Python 3.12:
+## Setup
 
 ```powershell
 python -m venv .venv
@@ -17,15 +18,30 @@ pip install -r requirements-dev.txt
 uvicorn app.main:app --reload --no-access-log
 ```
 
-Run the frontend separately on port 3000.
+Load values from `.env.example` into the shell environment. The application reads
+process environment variables and does not automatically load `.env`.
+Required for authenticated use: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`.
+`FRONTEND_ORIGINS` is an explicit comma-separated origin list; local default is
+`http://localhost:3000`. `LOG_LEVEL` defaults to INFO. Optional Groq settings are
+explained in [insights](../docs/insights.md); deterministic mode needs no key.
 
 ## Checks
 
 ```powershell
 ruff check .
-pytest
+python -m pytest -q
 ```
 
-Phase 5 adds `app/imports.py`: reserve a company import, complete it after checking Storage metadata, list imports with optional kind/status filters, read metadata, and delete an import and its stored object. The existing foreign keys cascade derived rows. Only CSV/XLSX and budget/actual/cash are accepted, with a 5 MB application limit checked at reservation and completion. FastAPI never receives file bytes. See [direct imports](../docs/imports.md) for the contract and failure handling.
+Tests simulate Auth, PostgreSQL REST, Storage, and Groq. They never require live
+production data. Finance tests use hand-calculated results, Decimal precision,
+period/week boundaries, planned-only scenarios, transactional import retries,
+workbook cells, and formula-injection cases. Security tests cover ownership,
+private paths, safe errors, date/amount bounds, and secret handling.
 
-Tests simulate Supabase Auth, Data API, and Storage responses; they do not need a production database. They cover upload reservation, safe paths, ownership, actual file sizes, state conflicts, pagination, signing rollback, and deletion failures. Parsing and finance endpoints belong to later phases.
+Uploads go browser → private Storage. FastAPI accepts JSON metadata and later
+downloads the stored file for parsing. Excel generation runs in a thread pool,
+uploads private bytes, and persists status metadata. These synchronous request
+flows have explicit input/output limits and are not background jobs.
+
+See [architecture](../docs/architecture.md), [finance methods](../docs/finance-methodology.md),
+[reports](../docs/reports.md), and [security](../SECURITY.md).

@@ -38,6 +38,14 @@ logging, caching, safe Excel output, retries, and deletion semantics. Confirmed
 issues have regression tests; see `SECURITY.md`.
 Checks: 147 backend and 21 frontend tests, lint/typecheck, and read-only live
 RLS, bucket privacy, and import-function inspection.
+Phase 14: commit `b880f73`, production and both CI jobs success. Live table policies
+also confirmed `auth.uid() = user_id` for each CRUD operation.
+
+Phase 15 updates all READMEs, architecture, API/import/finance/deployment documentation,
+populated demo CSVs, screenshot placeholders, and CI permissions/time bounds.
+All local gates passed: Ruff, 148 backend tests, frontend lint/typecheck,
+21 frontend tests, and an optimized Next.js build. Demo calculations are checked
+by an automated test using the shipped samples.
 
 The user's single-project deployment requirement applies throughout: Next.js and FastAPI
 remain services of `flow-forecast`, at https://flow-forecast.vercel.app/.

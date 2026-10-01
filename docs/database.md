@@ -1,6 +1,6 @@
 # Database and private Storage
 
-Phase 2 defines the data model in [the schema migration](../supabase/migrations/20260930120000_initial_schema.sql) and [the Storage migration](../supabase/migrations/20260930120100_private_storage.sql). Both migrations are recorded as applied in the `stfciijaeixrygvrgdrn` Supabase project, and the eight public tables are present. Phase 3 adds authentication, while company and finance data flows arrive in later phases.
+Phase 2 defines the data model in [the schema migration](../supabase/migrations/20260930120000_initial_schema.sql) and [the Storage migration](../supabase/migrations/20260930120100_private_storage.sql). Both migrations are recorded as applied in the `stfciijaeixrygvrgdrn` Supabase project, and the eight public tables are present. Phase 6 adds processing leases, validation metadata, and invoker transaction functions; its SQL has also been applied. Company, finance, insight, and report APIs now use these tables.
 
 ## Tables
 
@@ -15,7 +15,7 @@ Phase 2 defines the data model in [the schema migration](../supabase/migrations/
 | `analysis_results` | Saved Groq or deterministic commentary and input parameters. | Provider is `groq` or `deterministic`. |
 | `reports` | Excel generation state and private object path. | Status is generating/ready/failed. |
 
-Every table has `user_id` and Row Level Security. Separate SELECT, INSERT, UPDATE, and DELETE policies allow an authenticated user to access only rows with their own `user_id`. Composite foreign keys prevent a user's child record from referencing another user's company or import. Backend ownership checks are still required when the API is implemented.
+Every table has `user_id` and Row Level Security. Separate SELECT, INSERT, UPDATE, and DELETE policies allow an authenticated user to access only rows with their own `user_id`. Composite foreign keys prevent a user's child record from referencing another user's company or import. Backend APIs also scope owners and verify parent ownership.
 
 Deleting a company cascades to its related database records. The Phase 4 delete endpoint removes private objects under that company's user/company folders through the Storage API before deleting the company row. See [company management](companies.md) for failure and retry behavior.
 
@@ -25,16 +25,16 @@ Both `fpna-imports` and `fpna-reports` are private buckets. Their object policie
 
 ```text
 fpna-imports/{user_id}/{company_id}/{import_id}/{safe_filename}
-fpna-reports/{user_id}/{company_id}/{report_id}/management_report.xlsx
+fpna-reports/{user_id}/{company_id}/{report_id}/report.xlsx
 ```
 
-The future API will issue signed upload and download URLs. These paths do not make files publicly accessible.
+The API issues signed direct upload capabilities and five-minute report download URLs. These paths do not make files publicly accessible.
 
 ## CSV templates
 
-The downloadable header-only files are [budget](../frontend/public/templates/budget_template.csv), [actual](../frontend/public/templates/actual_template.csv), and [cash](../frontend/public/templates/cash_template.csv). Budget and actual rows need `period,department,account_code,account_name,account_type,amount`. `period` accepts `YYYY-MM` or `YYYY-MM-DD` and is normalized to the first of the month by the future importer. `account_type` is one of `revenue`, `cogs`, `operating_expense`, `other_income`, or `other_expense`. Signed amounts are allowed for budget and actual rows.
+The downloadable header-only files are [budget](../frontend/public/templates/budget_template.csv), [actual](../frontend/public/templates/actual_template.csv), and [cash](../frontend/public/templates/cash_template.csv). Budget and actual rows need `period,department,account_code,account_name,account_type,amount`. `period` accepts `YYYY-MM` or `YYYY-MM-DD` and is normalized to the first of the month by the importer. `account_type` is one of `revenue`, `cogs`, `operating_expense`, `other_income`, or `other_expense`. Signed amounts are allowed for budget and actual rows.
 
-Cash rows need `expected_date,description,category,direction,amount,status`. Use a valid date, `inflow` or `outflow`, a nonnegative amount, and `planned`, `confirmed`, or `actual` status. Validation and import handling belong to later phases.
+Cash rows need `expected_date,description,category,direction,amount,status`. Use a valid date, `inflow` or `outflow`, a nonnegative amount, and `planned`, `confirmed`, or `actual` status. Validation and transactional persistence are implemented; see [import formats](import-formats.md).
 
 ## Apply to another Supabase project
 
@@ -46,4 +46,4 @@ pnpm dlx supabase link --project-ref <OTHER_PROJECT_REF>
 pnpm dlx supabase db push
 ```
 
-Get the project reference from the Supabase project dashboard. `db push` applies both migrations in order. The current production project already lists both migration versions, so no additional push is needed there. Do not run it against a project that already has conflicting tables or policies without reviewing the SQL and migration history first. See [Supabase setup](../supabase/README.md).
+Get the project reference from the Supabase project dashboard. `db push` applies outstanding migrations in order on a new project. On this production project, Phase 2 is recorded in CLI history and Phase 6 was applied manually; inspect and reconcile history before pushing anything. Do not run it against a project that already has conflicting tables or policies without reviewing the SQL and migration history first. See [Supabase setup](../supabase/README.md).
