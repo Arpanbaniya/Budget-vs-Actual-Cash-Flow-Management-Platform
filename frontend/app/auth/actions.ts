@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createClient } from "../../lib/supabase/server";
@@ -38,8 +39,16 @@ export async function signup(formData: FormData) {
   const data = credentials(formData, 8);
   if (!data) redirect("/signup?error=invalid_input");
 
+  const origin = (await headers()).get("origin") ?? "https://flow-forecast.vercel.app";
+  const emailRedirectTo = new URL("/auth/callback", origin).toString();
   const supabase = await createClient();
-  const { data: result, error } = await supabase.auth.signUp(data);
+  const { data: result, error } = await supabase.auth.signUp({
+    ...data,
+    options: { emailRedirectTo },
+  });
+  if (error?.code === "email_address_not_authorized") {
+    redirect("/signup?error=email_not_authorized");
+  }
   if (error) redirect("/signup?error=signup_failed");
 
   revalidatePath("/", "layout");

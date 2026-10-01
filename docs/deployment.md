@@ -14,7 +14,7 @@ The repository root is the Vercel root directory. [`vercel.json`](../vercel.json
 - `https://flow-forecast.vercel.app/api/v1/health` returns `{"status":"ok"}`.
 - The Vercel production deployment is connected to the GitHub repository's `main` branch.
 
-The public landing page and health route work without Supabase. Phase 3 account access requires the Supabase URL and publishable key for both services; see [authentication setup](auth.md). Keep secret and service-role keys out of `NEXT_PUBLIC_*` variables and Git.
+The public landing page and health route work without Supabase. Phase 3 production configuration is stored in this project's Vercel environment variables for both services; see [authentication setup](auth.md). Keep secret and service-role keys out of `NEXT_PUBLIC_*` variables and Git. After changing environment variables, redeploy so Next.js receives them at build time.
 
 ## Import again if needed
 

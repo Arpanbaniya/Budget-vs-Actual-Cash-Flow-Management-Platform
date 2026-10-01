@@ -1,20 +1,20 @@
 # Authentication setup
 
-Phase 3 uses Supabase email/password Auth with cookie-backed sessions in Next.js and a bearer token on protected FastAPI requests. The code is ready, but account creation and sign-in require a Supabase project and the environment values below.
+Phase 3 uses Supabase email/password Auth with cookie-backed sessions in Next.js and a bearer token on protected FastAPI requests. Production is connected to the `stfciijaeixrygvrgdrn` Supabase project.
 
 ## Connect the Supabase project
 
-Create or select a Supabase project. From the repository root, authenticate and apply the Phase 2 migrations if they are not already applied:
+The production project already records both Phase 2 migrations as applied. For future migrations, authenticate and link the CLI from the repository root:
 
 ```powershell
 pnpm dlx supabase login
-pnpm dlx supabase link --project-ref <YOUR_PROJECT_REF>
+pnpm dlx supabase link --project-ref stfciijaeixrygvrgdrn
 pnpm dlx supabase db push
 ```
 
-Get the project URL and **publishable** key from the Supabase project dashboard. The publishable key is meant for browser use; do not put a secret or service-role key in a `NEXT_PUBLIC_*` variable.
+Run `db push` only when there are new, reviewed migrations. Get the project URL and **publishable** key from the Supabase project dashboard. The publishable key is meant for browser use; do not put a secret or service-role key in a `NEXT_PUBLIC_*` variable.
 
-For local development, copy the frontend example to a local environment file and replace the placeholders. The backend reads process environment variables directly, so set those in the terminal before starting Uvicorn:
+For local development, copy the frontend example to a local environment file and enter this project's URL and publishable key. The backend reads process environment variables directly, so set those in the terminal before starting Uvicorn:
 
 ```powershell
 Copy-Item frontend/.env.example frontend/.env.local
@@ -31,19 +31,21 @@ Set these values:
 | Backend | `SUPABASE_URL` | Same project URL |
 | Backend | `SUPABASE_PUBLISHABLE_KEY` | Same publishable key |
 
-Set the four variables in the single Vercel project for Production (and Preview if needed), then redeploy. The frontend variables must be available at build time. No service-role key is required for Phase 3.
+The four variables are configured for Production in the single `flow-forecast` Vercel project. Configure Preview separately if you deploy a preview branch. The frontend variables must be available at build time. No service-role key is required for Phase 3.
 
 ## Email confirmation
 
-In Supabase Auth URL configuration, set the production Site URL to `https://flow-forecast.vercel.app` (without a trailing slash). For local development, use `http://localhost:3000`; add the local and production callback URLs to the redirect allowlist as needed.
+The Supabase Auth Site URL is `https://flow-forecast.vercel.app`. The redirect allowlist contains `https://flow-forecast.vercel.app/auth/confirm` and `http://localhost:3000/auth/confirm`, as well as the `/auth/callback` URLs used by the default email template.
 
-For the cookie-based confirmation flow, edit the **Confirm signup** email template in Supabase to use:
+When a custom SMTP provider is configured, the **Confirm signup** email template can use this server-side link:
 
 ```text
 {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email
 ```
 
-The `/auth/confirm` route verifies the one-time token and stores the session in cookies, then sends the user to `/dashboard`. It also accepts a PKCE `code` callback. If email confirmation is disabled in Supabase, signup creates a session immediately and goes directly to the dashboard. Hosted Supabase projects usually require email confirmation, so the email template and Site URL matter.
+This project's free tier currently uses Supabase's default SMTP, which does not allow template editing. Signup therefore sends the default confirmation link to `/auth/callback`; its browser client completes Supabase's PKCE exchange and writes the session cookies. The `/auth/confirm` route remains available for a future custom token-hash template. Email confirmation remains enabled. If email confirmation is disabled later, signup creates a session immediately and goes directly to the dashboard.
+
+Supabase's default SMTP only sends to email addresses belonging to this project's Supabase organization and has a low rate limit. To allow public signup, configure a custom SMTP provider in Supabase Authentication → Emails → SMTP Settings. Do not disable email confirmation to work around this limit.
 
 ## Request flow
 
@@ -54,6 +56,6 @@ The `/auth/confirm` route verifies the one-time token and stores the session in 
 
 Future frontend API calls must attach the access token to their request. Future data endpoints must filter by `user_id` and check resource ownership even though the database also has RLS. A cross-user resource should return 404.
 
-Without Supabase environment values, the public site remains available, the login/signup forms show a setup message, and the dashboard remains closed.
+Without local Supabase environment values, the public site remains available, the login/signup forms show a setup message, and the dashboard remains closed.
 
-References: [Supabase SSR client setup](https://supabase.com/docs/guides/auth/server-side/creating-a-client), [Next.js Supabase tutorial](https://supabase.com/docs/guides/getting-started/tutorials/with-nextjs), [Supabase JWT verification](https://supabase.com/docs/guides/auth/jwts).
+References: [Supabase SSR client setup](https://supabase.com/docs/guides/auth/server-side/creating-a-client), [PKCE flow](https://supabase.com/docs/guides/auth/sessions/pkce-flow), [Supabase default SMTP restrictions](https://supabase.com/docs/guides/auth/auth-smtp), [Supabase JWT verification](https://supabase.com/docs/guides/auth/jwts).

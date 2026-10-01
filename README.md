@@ -1,6 +1,6 @@
 # Flow & Forecast
 
-Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. The repository now includes **Phase 3 authentication**: signup, login, logout, protected dashboard, and FastAPI bearer-token verification. Supabase account setup and environment configuration are required before those flows can be used. The finance workflow described in the planning documents is not implemented yet.
+Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. The repository now includes **Phase 3 authentication**: signup, login, logout, protected dashboard, and FastAPI bearer-token verification. It is connected to the Supabase project for this repository. The finance workflow described in the planning documents is not implemented yet.
 
 ## Live app
 
@@ -37,7 +37,7 @@ pip install -r requirements-dev.txt
 uvicorn app.main:app --reload --no-access-log
 ```
 
-Then open `http://localhost:3000`. Configure Supabase as described in [authentication setup](docs/auth.md) to use signup, login, and the private dashboard. Until then, the forms show a setup message and `/dashboard` redirects to `/login`.
+Then open `http://localhost:3000`. Add the local Supabase environment values described in [authentication setup](docs/auth.md) to use signup, login, and the private dashboard.
 
 ## Checks
 
@@ -57,8 +57,8 @@ pytest
 
 Import the repository once in Vercel with the repository root (`./`) and the Services preset. The root [vercel.json](vercel.json) routes `/api/*` to FastAPI and all other requests to Next.js. See [deployment notes](docs/deployment.md).
 
-Phase 2 database migrations are documented in [database notes](docs/database.md). A Supabase project must be linked before they can be applied. [Authentication setup](docs/auth.md) lists the project and Vercel configuration required for Phase 3.
+Both Phase 2 database migrations are applied to the connected Supabase project; see [database notes](docs/database.md). The single Vercel project has the Phase 3 production environment variables; see [authentication setup](docs/auth.md).
 
 ## Current limitations
 
-Authentication code is present but cannot be used until Supabase is configured. There is no company management, data import, variance engine, cash forecast, scenario engine, AI commentary, or Excel reporting yet. Figures on the landing page are explicitly illustrative.
+Supabase's default email sender only sends confirmation email to members of the Supabase organization. Public signup needs a custom SMTP provider. There is no company management, data import, variance engine, cash forecast, scenario engine, AI commentary, or Excel reporting yet. Figures on the landing page are explicitly illustrative.

@@ -1,6 +1,6 @@
 # Database and private Storage
 
-Phase 2 defines the data model in [the schema migration](../supabase/migrations/20260930120000_initial_schema.sql) and [the Storage migration](../supabase/migrations/20260930120100_private_storage.sql). These migrations are ready to apply to a Supabase project. Phase 3 adds authentication, while company and finance data flows arrive in later phases.
+Phase 2 defines the data model in [the schema migration](../supabase/migrations/20260930120000_initial_schema.sql) and [the Storage migration](../supabase/migrations/20260930120100_private_storage.sql). Both migrations are recorded as applied in the `stfciijaeixrygvrgdrn` Supabase project, and the eight public tables are present. Phase 3 adds authentication, while company and finance data flows arrive in later phases.
 
 ## Tables
 
@@ -36,14 +36,14 @@ The downloadable header-only files are [budget](../frontend/public/templates/bud
 
 Cash rows need `expected_date,description,category,direction,amount,status`. Use a valid date, `inflow` or `outflow`, a nonnegative amount, and `planned`, `confirmed`, or `actual` status. Validation and import handling belong to later phases.
 
-## Apply to a Supabase project
+## Apply to another Supabase project
 
 From the repository root, sign in to the Supabase CLI and link the intended project:
 
 ```powershell
 pnpm dlx supabase login
-pnpm dlx supabase link --project-ref <YOUR_PROJECT_REF>
+pnpm dlx supabase link --project-ref <OTHER_PROJECT_REF>
 pnpm dlx supabase db push
 ```
 
-Get the project reference from the Supabase project dashboard. `db push` applies both migrations in order. Do not run it against a project that already has conflicting tables or policies without reviewing the SQL and migration history first. See [Supabase setup](../supabase/README.md).
+Get the project reference from the Supabase project dashboard. `db push` applies both migrations in order. The current production project already lists both migration versions, so no additional push is needed there. Do not run it against a project that already has conflicting tables or policies without reviewing the SQL and migration history first. See [Supabase setup](../supabase/README.md).

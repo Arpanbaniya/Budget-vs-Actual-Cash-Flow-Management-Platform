@@ -12,6 +12,7 @@ const errorText: Record<string, string> = {
   invalid_input: "Enter a valid email and password.",
   invalid_credentials: "We could not sign you in. Check your email and password.",
   signup_failed: "We could not create your account. Please try again.",
+  email_not_authorized: "This email cannot receive confirmation messages yet. Ask the workspace owner to configure an email provider.",
   confirmation_failed: "That confirmation link is invalid or has expired.",
   not_configured: "Account access is waiting for the Supabase project setup.",
 };
