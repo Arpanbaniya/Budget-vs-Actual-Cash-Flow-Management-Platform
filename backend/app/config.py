@@ -4,7 +4,7 @@ import os
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class Settings(BaseModel):
@@ -12,6 +12,10 @@ class Settings(BaseModel):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     supabase_url: str | None = None
     supabase_publishable_key: str | None = None
+    ai_provider: Literal["none", "groq"] = "none"
+    groq_api_key: str | None = None
+    groq_model: str = Field(default="llama-3.3-70b-versatile", min_length=1, max_length=200)
+    ai_timeout_seconds: float = Field(default=20, ge=1, le=60, allow_inf_nan=False)
 
     @field_validator("frontend_origins")
     @classmethod
@@ -62,4 +66,8 @@ class Settings(BaseModel):
             log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
             supabase_url=os.getenv("SUPABASE_URL") or None,
             supabase_publishable_key=os.getenv("SUPABASE_PUBLISHABLE_KEY") or None,
+            ai_provider=os.getenv("AI_PROVIDER", "none"),
+            groq_api_key=os.getenv("GROQ_API_KEY") or None,
+            groq_model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+            ai_timeout_seconds=float(os.getenv("AI_TIMEOUT_SECONDS", "20")),
         )

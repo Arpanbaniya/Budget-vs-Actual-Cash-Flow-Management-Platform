@@ -23,6 +23,10 @@ Phase 10: commit `517a87c`, production and CI success, 117 backend and 17 fronte
 
 Phase 11 adds the composed financial dashboard with period/scenario filters,
 financial and cash cards, shared charts, top variances, and missing-data guidance.
+Phase 11: commit `7b1cab7`, production and CI success, 119 backend and 18 frontend tests.
+
+Phase 12 adds cached fact-backed insights, optional Groq prioritization, and
+deterministic fallback for missing credentials and provider failures.
 
 The user's single-project deployment requirement applies throughout: Next.js and FastAPI
 remain services of `flow-forecast`, at https://flow-forecast.vercel.app/.

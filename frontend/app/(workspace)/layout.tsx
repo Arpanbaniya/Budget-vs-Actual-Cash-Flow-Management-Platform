@@ -41,6 +41,9 @@ export default async function WorkspaceLayout({
             <Link href="/scenarios" className="hover:underline">
               Scenarios
             </Link>
+            <Link href="/insights" className="hover:underline">
+              Insights
+            </Link>
           </nav>
           <div className="flex flex-wrap items-center gap-4">
             {user.email && (

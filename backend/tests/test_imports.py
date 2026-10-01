@@ -42,6 +42,7 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
     derived = {"financial_lines": [], "cash_items": []}
     cash_balances = []
     scenario_rows = []
+    analyses = []
     calls: list[httpx.Request] = []
     failures: dict[str, int] = {}
     controls: dict[str, object] = {}
@@ -66,6 +67,18 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
                     row for row in selected if request.url.params["id"] == f"eq.{row['id']}"
                 ]
             return httpx.Response(200, json=selected)
+        if path == "/rest/v1/analysis_results":
+            if request.method == "POST":
+                body = json.loads(request.content)
+                assert body["user_id"] == owner
+                assert companies[body["company_id"]]["user_id"] == owner
+                analyses.append({"id": str(uuid4()), "created_at": NOW, **body})
+                return httpx.Response(201)
+            assert request.url.params["user_id"] == f"eq.{owner}"
+            selected = [row for row in analyses if row["user_id"] == owner]
+            for key in ("company_id", "fact_hash"):
+                selected = [row for row in selected if request.url.params[key] == f"eq.{row[key]}"]
+            return httpx.Response(200, json=selected[:1])
         if path == "/rest/v1/imports":
             if request.method == "POST":
                 body = json.loads(request.content)

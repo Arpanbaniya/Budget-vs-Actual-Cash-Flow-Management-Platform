@@ -13,6 +13,7 @@ from app.dashboard import router as dashboard_router
 from app.errors import register_error_handlers
 from app.forecast import router as forecast_router
 from app.imports import router as imports_router
+from app.insights import router as insights_router
 from app.scenarios import router as scenarios_router
 from app.structured_logging import configure_logging
 from app.variance import router as variance_router
@@ -43,6 +44,7 @@ def create_app() -> FastAPI:
     application.include_router(forecast_router)
     application.include_router(scenarios_router)
     application.include_router(dashboard_router)
+    application.include_router(insights_router)
 
     @application.middleware("http")
     async def log_request(request: Request, call_next: RequestResponseEndpoint) -> Response:
