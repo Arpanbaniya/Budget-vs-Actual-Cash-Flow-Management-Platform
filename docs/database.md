@@ -1,6 +1,6 @@
 # Database and private Storage
 
-Phase 2 defines the data model in [the schema migration](../supabase/migrations/20260930120000_initial_schema.sql) and [the Storage migration](../supabase/migrations/20260930120100_private_storage.sql). These migrations are ready to apply to a Supabase project. The application does not connect to them until later phases add authentication and data flows.
+Phase 2 defines the data model in [the schema migration](../supabase/migrations/20260930120000_initial_schema.sql) and [the Storage migration](../supabase/migrations/20260930120100_private_storage.sql). These migrations are ready to apply to a Supabase project. Phase 3 adds authentication, while company and finance data flows arrive in later phases.
 
 ## Tables
 

@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 
-import { login } from "../auth/actions";
+import { signup } from "../auth/actions";
 import { AuthForm } from "../auth/auth-form";
 import { isSupabaseConfigured } from "../../lib/supabase/config";
 import { createClient } from "../../lib/supabase/server";
 
-export default async function LoginPage({
+export default async function SignupPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string; message?: string }>;
@@ -17,5 +17,5 @@ export default async function LoginPage({
     if (data?.claims?.sub) redirect("/dashboard");
   }
   const { error, message } = await searchParams;
-  return <AuthForm mode="login" action={login} configured={configured} error={error} message={message} />;
+  return <AuthForm mode="signup" action={signup} configured={configured} error={error} message={message} />;
 }

@@ -1,8 +1,11 @@
-from fastapi import FastAPI, Request
+from typing import Annotated
+
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
+from app.auth import AuthenticatedUser, get_authenticated_user
 from app.config import Settings
 from app.errors import register_error_handlers
 from app.structured_logging import configure_logging
@@ -16,6 +19,7 @@ def create_app() -> FastAPI:
         version="0.1.0",
         description="Backend foundation for budget and cash flow management.",
     )
+    application.state.settings = settings
 
     application.add_middleware(
         CORSMiddleware,
@@ -50,6 +54,10 @@ def create_app() -> FastAPI:
     @application.get("/api/v1/health", tags=["health"])
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @application.get("/api/v1/me", tags=["auth"])
+    def me(user: Annotated[AuthenticatedUser, Depends(get_authenticated_user)]) -> dict[str, str | None]:
+        return {"user_id": user.user_id, "email": user.email}
 
     return application
 

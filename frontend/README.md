@@ -1,8 +1,8 @@
 # Flow & Forecast frontend
 
-The Next.js 16 application is the frontend service in the repository's single Vercel Services project. The live Phase 1 foundation is at https://flow-forecast.vercel.app/. Phase 2 adds header-only CSV templates in `public/templates/` for later import flows.
+The Next.js 16 application is the frontend service in the repository's single Vercel Services project. The live app is at https://flow-forecast.vercel.app/. Phase 2 added header-only CSV templates in `public/templates/` for later import flows.
 
-The landing page previews the intended workflow and labels sample figures as illustrative. `/dashboard` currently redirects to `/login`, which explains that authentication arrives in Phase 3. No finance or account data is exposed by these placeholder routes.
+The landing page previews the intended workflow and labels sample figures as illustrative. Phase 3 adds Supabase email/password signup, login, logout, and a private `/dashboard`. The forms require a configured Supabase project; without one, they show a setup message. See [authentication setup](../docs/auth.md).
 
 ## Local development
 

@@ -14,7 +14,7 @@ The repository root is the Vercel root directory. [`vercel.json`](../vercel.json
 - `https://flow-forecast.vercel.app/api/v1/health` returns `{"status":"ok"}`.
 - The Vercel production deployment is connected to the GitHub repository's `main` branch.
 
-The foundation needs no Supabase or Groq credentials. Future phases will configure those values as Vercel environment variables. Secrets must never be committed or exposed through `NEXT_PUBLIC_*` variables.
+The public landing page and health route work without Supabase. Phase 3 account access requires the Supabase URL and publishable key for both services; see [authentication setup](auth.md). Keep secret and service-role keys out of `NEXT_PUBLIC_*` variables and Git.
 
 ## Import again if needed
 

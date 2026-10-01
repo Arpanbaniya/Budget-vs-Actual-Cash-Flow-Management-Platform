@@ -15,7 +15,7 @@ export default function Home() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#164d3b] text-lg text-white">↗</span>
             <span>Flow & Forecast</span>
           </Link>
-          <span className="rounded-full border border-[#c7d8cd] bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#356952]">Foundation preview</span>
+          <Link href="/login" className="rounded-full border border-[#c7d8cd] bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#356952] hover:bg-[#eef5ee]">Sign in</Link>
         </header>
         <section className="grid gap-12 py-20 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:py-28">
           <div>
@@ -24,7 +24,7 @@ export default function Home() {
             <p className="mt-7 max-w-xl text-lg leading-8 text-[#53675d]">One workspace for budget performance, short-term cash visibility, and practical scenario planning. Built for finance teams that need answers they can trace back to the numbers.</p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <a href="#workflow" className="rounded-xl bg-[#164d3b] px-6 py-3 font-medium text-white transition hover:bg-[#0c3829]">Explore the workflow <span aria-hidden>→</span></a>
-              <span className="text-sm text-[#718278]">Application features are being built in phases.</span>
+              <Link href="/signup" className="rounded-xl border border-[#c7d8cd] bg-white px-6 py-3 font-medium text-[#164d3b] transition hover:bg-[#eef5ee]">Create account</Link>
             </div>
           </div>
           <div aria-label="Illustrative finance dashboard preview" className="rounded-[2rem] border border-[#d8e1d7] bg-white p-5 shadow-[0_24px_70px_rgba(27,60,42,0.09)] sm:p-7">
@@ -44,7 +44,7 @@ export default function Home() {
           </div>
         </section>
         <section id="workflow" className="border-t border-[#d8dfd7] pt-10">
-          <div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#407a5e]">The planned workflow</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">From source data to a clearer decision</h2></div><p className="max-w-sm text-sm leading-6 text-[#64766c]">The foundation is live first. Secure accounts, imports, calculations, and reports follow in later phases.</p></div>
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#407a5e]">The planned workflow</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">From source data to a clearer decision</h2></div><p className="max-w-sm text-sm leading-6 text-[#64766c]">Account access is being connected. Imports, calculations, and reports follow in later phases.</p></div>
           <div className="grid gap-4 md:grid-cols-3">{steps.map((step) => <article key={step.number} className="rounded-2xl border border-[#dce4da] bg-white p-7"><span className="text-sm font-semibold text-[#6aa17b]">{step.number}</span><h3 className="mt-8 text-2xl font-semibold">{step.title}</h3><p className="mt-3 leading-7 text-[#64766c]">{step.detail}</p></article>)}</div>
         </section>
         <footer className="mt-20 border-t border-[#d8dfd7] pt-6 text-sm text-[#718278]">Flow & Forecast · Budget vs Actual + 13-Week Cash Flow Management</footer>
