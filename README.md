@@ -1,6 +1,6 @@
 # Flow & Forecast
 
-Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. **Phase 10 scenario modeling** is implemented alongside authentication, company management, private CSV/XLSX imports, variance analysis, and cash records. Users can analyze budget versus actual and project weekly cash, minimum balances, and threshold breaches over 1–26 weeks (13 by default). Scenarios apply planned cash adjustments and collection delays, with base comparisons. See [scenarios](docs/scenarios.md), [variance methodology](docs/variance-methodology.md), [cash records](docs/cash-records.md), and [forecast methodology](docs/cash-forecast-methodology.md).
+Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. **Phase 11 financial dashboard** is implemented alongside authentication, company management, private CSV/XLSX imports, variance analysis, and cash records. Users can analyze budget versus actual and project weekly cash, minimum balances, and threshold breaches over 1–26 weeks (13 by default). Scenarios apply planned cash adjustments and collection delays, with base comparisons. See [scenarios](docs/scenarios.md), [variance methodology](docs/variance-methodology.md), [cash records](docs/cash-records.md), and [forecast methodology](docs/cash-forecast-methodology.md).
 
 ## Live app
 

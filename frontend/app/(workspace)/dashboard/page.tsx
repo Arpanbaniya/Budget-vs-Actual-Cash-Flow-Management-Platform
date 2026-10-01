@@ -1,7 +1,7 @@
-import { CompanyWorkspace } from "../../../components/company-workspace";
+import { DashboardWorkspace } from "../../../components/dashboard-workspace";
 import { requireWorkspaceUser } from "../../../lib/workspace-user";
 
 export default async function DashboardPage() {
   const user = await requireWorkspaceUser();
-  return <CompanyWorkspace key={user.id} mode="dashboard" userId={user.id} />;
+  return <DashboardWorkspace key={user.id} userId={user.id} />;
 }

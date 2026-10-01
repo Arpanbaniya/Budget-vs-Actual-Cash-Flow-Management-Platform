@@ -9,6 +9,7 @@ from app.auth import AuthenticatedUser, get_authenticated_user
 from app.cash import router as cash_router
 from app.companies import router as companies_router
 from app.config import Settings
+from app.dashboard import router as dashboard_router
 from app.errors import register_error_handlers
 from app.forecast import router as forecast_router
 from app.imports import router as imports_router
@@ -41,6 +42,7 @@ def create_app() -> FastAPI:
     application.include_router(cash_router)
     application.include_router(forecast_router)
     application.include_router(scenarios_router)
+    application.include_router(dashboard_router)
 
     @application.middleware("http")
     async def log_request(request: Request, call_next: RequestResponseEndpoint) -> Response:

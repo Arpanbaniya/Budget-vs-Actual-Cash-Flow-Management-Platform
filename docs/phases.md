@@ -19,6 +19,10 @@ Phase 9: commits `c7e8369`–`5393694`, production and CI success, 108 backend a
 15 frontend tests. Forecast chart, table, and threshold warnings verified.
 
 Phase 10 adds owned scenarios and base/scenario forecast comparison.
+Phase 10: commit `517a87c`, production and CI success, 117 backend and 17 frontend tests.
+
+Phase 11 adds the composed financial dashboard with period/scenario filters,
+financial and cash cards, shared charts, top variances, and missing-data guidance.
 
 The user's single-project deployment requirement applies throughout: Next.js and FastAPI
 remain services of `flow-forecast`, at https://flow-forecast.vercel.app/.
