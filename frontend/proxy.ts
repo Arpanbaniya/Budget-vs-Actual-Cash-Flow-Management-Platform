@@ -15,6 +15,8 @@ export const config = {
     "/companies/:path*",
     "/imports/:path*",
     "/variance/:path*",
+    "/cash/:path*",
+    "/forecast/:path*",
     "/cash-forecast/:path*",
     "/scenarios/:path*",
     "/insights/:path*",
