@@ -64,5 +64,15 @@ Phase 16 production settings are explicit: `AI_PROVIDER=none`,
 `LOG_LEVEL=INFO`, and `FRONTEND_ORIGINS=https://flow-forecast.vercel.app`.
 The existing four Supabase server/public variables are production-scoped.
 No Groq key has been supplied; optional live Groq execution is not verified.
+Phase 17 inspected the existing frontend public Supabase URL, matching the
+connected project, and the production Site URL and four confirmation/callback
+redirects. The API base remains unset, so requests use this same domain.
+The landing page's obsolete foundation notice is replaced with the implemented
+workflow. Successful account login and authenticated API calls are pending the
+confirmed account handoff for Phase 18.
+Unauthenticated `/dashboard` redirects to the configured login form without
+browser console warnings or errors. Phase 17 deployment checks can be finished
+independently, but its authenticated acceptance checks require the user's login
+before proceeding to the Phase 18 demo workflow.
 Before authenticated production verification is complete, local synthetic browser
 checks and unit tests must not be described as proof of the live end-to-end flow.

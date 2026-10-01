@@ -54,6 +54,18 @@ project: explicit frontend origin, deterministic AI provider, model/timeout,
 logging level, and a validated 1–5 MB import limit enforced throughout uploads.
 Python 3.12 and the FastAPI entry point are pinned; Supabase settings remain private.
 Local checks: Ruff and 153 backend tests passed.
+Phase 16: commit `c012759`, production and CI success. Live health 200, private
+API 401/no-store, allowed-origin preflight 200, and unexpected-origin preflight
+400 without an allow-origin header were verified.
+
+Phase 17 verifies frontend production settings, shared-domain API routing, and
+Supabase's existing Site URL and confirmation/callback allowlist. It also updates
+the landing page to describe the implemented workflow. Authenticated happy-path
+verification depends on the user's confirmed account and remains tracked in Phase 18.
+Frontend lint, typecheck, all 21 tests, and the optimized build passed. Live
+`/dashboard` redirects an unauthenticated browser to `/login`, which renders
+configured email/password fields without console warnings or errors. Phase 17's
+authenticated acceptance checks are still pending; Phase 18 has not started.
 
 The user's single-project deployment requirement applies throughout: Next.js and FastAPI
 remain services of `flow-forecast`, at https://flow-forecast.vercel.app/.

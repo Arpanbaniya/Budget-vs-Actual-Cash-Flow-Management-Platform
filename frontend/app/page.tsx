@@ -44,7 +44,7 @@ export default function Home() {
           </div>
         </section>
         <section id="workflow" className="border-t border-[#d8dfd7] pt-10">
-          <div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#407a5e]">The planned workflow</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">From source data to a clearer decision</h2></div><p className="max-w-sm text-sm leading-6 text-[#64766c]">Account access is being connected. Imports, calculations, and reports follow in later phases.</p></div>
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#407a5e]">Your finance workflow</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">From source data to a clearer decision</h2></div><p className="max-w-sm text-sm leading-6 text-[#64766c]">Sign in to import your data, review budget performance, compare cash scenarios, and download management reports.</p></div>
           <div className="grid gap-4 md:grid-cols-3">{steps.map((step) => <article key={step.number} className="rounded-2xl border border-[#dce4da] bg-white p-7"><span className="text-sm font-semibold text-[#6aa17b]">{step.number}</span><h3 className="mt-8 text-2xl font-semibold">{step.title}</h3><p className="mt-3 leading-7 text-[#64766c]">{step.detail}</p></article>)}</div>
         </section>
         <footer className="mt-20 border-t border-[#d8dfd7] pt-6 text-sm text-[#718278]">Flow & Forecast · Budget vs Actual + 13-Week Cash Flow Management</footer>

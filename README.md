@@ -9,7 +9,7 @@ comparison, management commentary, and private Excel reports into one workspace.
 [Open Flow & Forecast](https://flow-forecast.vercel.app/)
 
 One GitHub repository and one Vercel Services project deploy the Next.js frontend
-and FastAPI backend on the same domain. Phases 0–14 are implemented and deployed.
+and FastAPI backend on the same domain. Phases 0–16 are implemented and deployed.
 The authenticated production smoke test is tracked separately; test counts and
 phase commits are in [implementation progress](docs/phases.md).
 
