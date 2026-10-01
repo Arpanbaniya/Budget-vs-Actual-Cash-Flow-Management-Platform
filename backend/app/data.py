@@ -25,7 +25,16 @@ def exact_json(value):
     if isinstance(value, (date, UUID)):
         return str(value)
     if isinstance(value, dict):
-        return {key: exact_json(item) for key, item in value.items()}
+        money_fields = {
+            "amount",
+            "minimum_cash_threshold",
+            "inflow_adjustment_pct",
+            "outflow_adjustment_pct",
+        }
+        return {
+            key: str(item) if key in money_fields and item is not None else exact_json(item)
+            for key, item in value.items()
+        }
     if isinstance(value, (list, tuple)):
         return [exact_json(item) for item in value]
     return value

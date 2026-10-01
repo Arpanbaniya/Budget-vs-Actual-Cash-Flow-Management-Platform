@@ -7,6 +7,10 @@ Phase 6: commit `79f1039`, production Ready, GitHub CI success, 80 backend and
 12 frontend tests; parser and processing controls verified.
 
 Phase 7 adds deterministic variance aggregation and the `/variance` page.
+Phase 7: commit `f01d1b3`, production and CI success, 93 backend and 13 frontend
+tests; variance forms, table, and chart verified in the browser.
+
+Phase 8 adds cash-balance and cash-item CRUD and the `/cash` page.
 
 The user's single-project deployment requirement applies throughout: Next.js and FastAPI
 remain services of `flow-forecast`, at https://flow-forecast.vercel.app/.

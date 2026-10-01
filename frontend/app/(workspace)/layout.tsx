@@ -29,7 +29,12 @@ export default async function WorkspaceLayout({
             <Link href="/imports" className="hover:underline">
               Imports
             </Link>
-            <Link href="/variance" className="hover:underline">Variance</Link>
+            <Link href="/variance" className="hover:underline">
+              Variance
+            </Link>
+            <Link href="/cash" className="hover:underline">
+              Cash
+            </Link>
           </nav>
           <div className="flex flex-wrap items-center gap-4">
             {user.email && (

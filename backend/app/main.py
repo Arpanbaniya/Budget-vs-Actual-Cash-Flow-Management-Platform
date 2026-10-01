@@ -6,6 +6,7 @@ from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
 from app.auth import AuthenticatedUser, get_authenticated_user
+from app.cash import router as cash_router
 from app.companies import router as companies_router
 from app.config import Settings
 from app.errors import register_error_handlers
@@ -35,6 +36,7 @@ def create_app() -> FastAPI:
     application.include_router(companies_router)
     application.include_router(imports_router)
     application.include_router(variance_router)
+    application.include_router(cash_router)
 
     @application.middleware("http")
     async def log_request(request: Request, call_next: RequestResponseEndpoint) -> Response:

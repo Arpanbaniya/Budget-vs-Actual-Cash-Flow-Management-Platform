@@ -1,6 +1,6 @@
 # Flow & Forecast
 
-Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. **Phase 7 variance analysis** is implemented alongside authentication, company management, and private CSV/XLSX imports. Users can process files, see row-numbered validation feedback, and analyze budget versus actual by account, department, or month with filters, profit summaries, favorability labels, and charts. See [variance methodology](docs/variance-methodology.md).
+Budget vs Actual + 13-Week Cash Flow Management is an FP&A portfolio application under development. **Phase 8 cash records** is implemented alongside authentication, company management, private CSV/XLSX imports, and variance analysis. Users can process files, analyze budget versus actual, and manage dated cash balances and planned/confirmed/actual cash items. See [variance methodology](docs/variance-methodology.md) and [cash records](docs/cash-records.md).
 
 ## Live app
 

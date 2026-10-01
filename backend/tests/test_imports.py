@@ -40,6 +40,7 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
     records: dict[str, dict] = {}
     objects: dict[str, dict] = {}
     derived = {"financial_lines": [], "cash_items": []}
+    cash_balances = []
     calls: list[httpx.Request] = []
     failures: dict[str, int] = {}
     controls: dict[str, object] = {}
@@ -130,6 +131,57 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
             selected = [entry for entry in selected if start <= entry["period"] <= end]
             offset = int(request.url.params.get("offset", 0))
             return httpx.Response(200, json=selected[offset : offset + 1000])
+        if path in {"/rest/v1/cash_balances", "/rest/v1/cash_items"}:
+            table = path.rsplit("/", 1)[-1]
+            entries = cash_balances if table == "cash_balances" else derived["cash_items"]
+            if request.method == "POST":
+                body = json.loads(request.content)
+                assert body["user_id"] == owner
+                assert companies[body["company_id"]]["user_id"] == owner
+                if table == "cash_balances" and any(
+                    row["company_id"] == body["company_id"]
+                    and row["balance_date"] == body["balance_date"]
+                    for row in entries
+                ):
+                    return httpx.Response(409)
+                row = {
+                    "id": str(uuid4()),
+                    "created_at": NOW,
+                    "updated_at": NOW,
+                    "import_id": None,
+                    **body,
+                }
+                entries.append(row)
+                return httpx.Response(201, json=[row])
+            assert request.url.params["user_id"] == f"eq.{owner}"
+            selected = [row for row in entries if row.get("user_id") == owner]
+            for key in ("id", "company_id", "direction", "status", "category"):
+                if key in request.url.params:
+                    selected = [
+                        row for row in selected if request.url.params[key] == f"eq.{row[key]}"
+                    ]
+            if "and" in request.url.params:
+                for condition in request.url.params["and"].strip("()").split(","):
+                    field, operation, value = condition.split(".", 2)
+                    selected = [
+                        row
+                        for row in selected
+                        if (row[field] >= value if operation == "gte" else row[field] <= value)
+                    ]
+            if request.method == "GET":
+                field = "balance_date" if table == "cash_balances" else "expected_date"
+                selected.sort(
+                    key=lambda row: (row[field], row["id"]), reverse=table == "cash_balances"
+                )
+                offset = int(request.url.params.get("offset", 0))
+                return httpx.Response(200, json=selected[offset : offset + 1000])
+            if request.method == "PATCH":
+                for row in selected:
+                    row.update(json.loads(request.content))
+                return httpx.Response(200, json=selected)
+            if request.method == "DELETE":
+                entries[:] = [row for row in entries if row not in selected]
+                return httpx.Response(200, json=selected)
         if path.startswith("/rest/v1/rpc/"):
             body = json.loads(request.content)
             row = records.get(body["p_import_id"])
@@ -195,6 +247,7 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
         "calls": calls,
         "failures": failures,
         "controls": controls,
+        "cash_balances": cash_balances,
     }
 
 
