@@ -7,10 +7,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
+from app.cash import owned_record
 from app.companies import Company, CompanyStore, Store
 from app.data import exact_json, money_precision, read_rows
 from app.errors import ApiError
 from app.imports import private_response
+from app.scenarios import apply_scenario
 
 router = APIRouter(
     prefix="/api/v1/companies", tags=["forecast"], dependencies=[Depends(private_response)]
@@ -70,12 +72,25 @@ def calculate_forecast(
 
 
 async def forecast_data(
-    store: CompanyStore, company: Company, start_date: date, weeks: int
+    store: CompanyStore,
+    company: Company,
+    start_date: date,
+    weeks: int,
+    scenario_id: UUID | None = None,
 ) -> dict:
     try:
         end = start_date + timedelta(days=weeks * 7 - 1)
     except OverflowError as error:
         raise ApiError(422, "DATE_INVALID", "Choose an earlier forecast start date.") from error
+    scenario = None
+    source_start = start_date
+    if scenario_id:
+        scenario = await owned_record(store, "scenarios", scenario_id)
+        if scenario["company_id"] != str(company.id):
+            raise ApiError(404, "NOT_FOUND", "Scenario not found for this company.")
+        source_start = start_date - timedelta(
+            days=min(scenario["collection_delay_days"], (start_date - date.min).days)
+        )
     balances = await read_rows(
         store,
         "cash_balances",
@@ -93,16 +108,31 @@ async def forecast_data(
         store,
         "cash_items",
         company.id,
-        **{"and": f"(expected_date.gte.{start_date},expected_date.lte.{end})"},
+        **{"and": f"(expected_date.gte.{source_start},expected_date.lte.{end})"},
     )
-    return calculate_forecast(balances[0], items, start_date, weeks, company.minimum_cash_threshold)
+    result = calculate_forecast(
+        balances[0],
+        apply_scenario(items, scenario) if scenario else items,
+        start_date,
+        weeks,
+        company.minimum_cash_threshold,
+    )
+    result["scenario"] = scenario
+    return result
 
 
 @router.get("/{company_id}/cash-forecast")
 async def get_forecast(
-    company_id: UUID, store: Store, start_date: date, weeks: Annotated[int, Query(ge=1, le=26)] = 13
+    company_id: UUID,
+    store: Store,
+    start_date: date,
+    weeks: Annotated[int, Query(ge=1, le=26)] = 13,
+    scenario_id: UUID | None = None,
 ) -> dict:
     company = await store.get(company_id)
     return exact_json(
-        {"currency": company.currency, **await forecast_data(store, company, start_date, weeks)}
+        {
+            "currency": company.currency,
+            **await forecast_data(store, company, start_date, weeks, scenario_id),
+        }
     )

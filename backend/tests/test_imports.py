@@ -41,6 +41,7 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
     objects: dict[str, dict] = {}
     derived = {"financial_lines": [], "cash_items": []}
     cash_balances = []
+    scenario_rows = []
     calls: list[httpx.Request] = []
     failures: dict[str, int] = {}
     controls: dict[str, object] = {}
@@ -131,9 +132,13 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
             selected = [entry for entry in selected if start <= entry["period"] <= end]
             offset = int(request.url.params.get("offset", 0))
             return httpx.Response(200, json=selected[offset : offset + 1000])
-        if path in {"/rest/v1/cash_balances", "/rest/v1/cash_items"}:
+        if path in {"/rest/v1/cash_balances", "/rest/v1/cash_items", "/rest/v1/scenarios"}:
             table = path.rsplit("/", 1)[-1]
-            entries = cash_balances if table == "cash_balances" else derived["cash_items"]
+            entries = (
+                cash_balances
+                if table == "cash_balances"
+                else (scenario_rows if table == "scenarios" else derived["cash_items"])
+            )
             if request.method == "POST":
                 body = json.loads(request.content)
                 assert body["user_id"] == owner
@@ -172,7 +177,11 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
                 cutoff = request.url.params["balance_date"].removeprefix("lte.")
                 selected = [row for row in selected if row["balance_date"] <= cutoff]
             if request.method == "GET":
-                field = "balance_date" if table == "cash_balances" else "expected_date"
+                field = {
+                    "cash_balances": "balance_date",
+                    "cash_items": "expected_date",
+                    "scenarios": "created_at",
+                }[table]
                 selected.sort(
                     key=lambda row: (row[field], row["id"]), reverse=table == "cash_balances"
                 )
@@ -251,6 +260,8 @@ def imports_api(monkeypatch: pytest.MonkeyPatch):
         "failures": failures,
         "controls": controls,
         "cash_balances": cash_balances,
+        "scenarios": scenario_rows,
+        "companies": companies,
     }
 
 

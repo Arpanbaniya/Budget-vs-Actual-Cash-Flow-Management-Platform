@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { apiRequest, type Company } from "../lib/api";
+import type { Scenario } from "./scenario-workspace";
 import {
   CompanyScope,
   buttonClass,
@@ -48,19 +49,58 @@ export function ForecastPanel({ company }: { company: Company }) {
   const [weeks, setWeeks] = useState(13);
   const [query, setQuery] = useState(`start_date=${start}&weeks=13`);
   const [version, setVersion] = useState(0);
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [scenarioId, setScenarioId] = useState("");
+  const [scenarioError, setScenarioError] = useState("");
+  const [scenarioVersion, setScenarioVersion] = useState(0);
   const [state, setState] = useState<{
     data?: ForecastResult;
+    base?: ForecastResult;
     error?: string;
     loading: boolean;
   }>({ loading: true });
   useEffect(() => {
     const controller = new AbortController();
-    apiRequest<ForecastResult>(
-      `/companies/${company.id}/cash-forecast?${query}`,
+    apiRequest<Scenario[]>(`/companies/${company.id}/scenarios`, {
+      signal: controller.signal,
+    })
+      .then((rows) => {
+        if (!controller.signal.aborted) {
+          setScenarios(rows);
+          setScenarioError("");
+        }
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted)
+          setScenarioError(
+            error instanceof Error
+              ? error.message
+              : "Scenarios could not be loaded.",
+          );
+      });
+    return () => controller.abort();
+  }, [company.id, scenarioVersion]);
+  useEffect(() => {
+    const controller = new AbortController();
+    const params = new URLSearchParams(query);
+    const chosen = params.get("scenario_id");
+    params.delete("scenario_id");
+    const base = apiRequest<ForecastResult>(
+      `/companies/${company.id}/cash-forecast?${params}`,
       { signal: controller.signal },
-    )
-      .then((data) => {
-        if (!controller.signal.aborted) setState({ data, loading: false });
+    );
+    Promise.all([
+      base,
+      chosen
+        ? apiRequest<ForecastResult>(
+            `/companies/${company.id}/cash-forecast?${query}`,
+            { signal: controller.signal },
+          )
+        : base,
+    ])
+      .then(([base, data]) => {
+        if (!controller.signal.aborted)
+          setState({ data, base: chosen ? base : undefined, loading: false });
       })
       .catch((error: unknown) => {
         if (!controller.signal.aborted)
@@ -81,6 +121,7 @@ export function ForecastPanel({ company }: { company: Company }) {
       new URLSearchParams({
         start_date: start,
         weeks: String(weeks),
+        ...(scenarioId ? { scenario_id: scenarioId } : {}),
       }).toString(),
     );
     setVersion((value) => value + 1);
@@ -116,7 +157,30 @@ export function ForecastPanel({ company }: { company: Company }) {
         <button className={buttonClass} disabled={state.loading}>
           Update forecast
         </button>
+        <label className="grid gap-2 text-sm">
+          Scenario
+          <select
+            className={inputClass}
+            value={scenarioId}
+            onChange={(event) => setScenarioId(event.target.value)}
+          >
+            <option value="">Base forecast</option>
+            {scenarios.map((row) => (
+              <option key={row.id} value={row.id}>
+                {row.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          className="underline text-sm"
+          onClick={() => setScenarioVersion((value) => value + 1)}
+        >
+          Reload scenarios
+        </button>
       </form>
+      {scenarioError && <p role="alert">{scenarioError}</p>}
       {state.loading ? (
         <p role="status">Loading forecast…</p>
       ) : state.error ? (
@@ -127,9 +191,72 @@ export function ForecastPanel({ company }: { company: Company }) {
           </Link>
         </p>
       ) : (
-        state.data && <ForecastView data={state.data} />
+        state.data && (
+          <>
+            <p className="text-sm font-medium">
+              {state.data.scenario
+                ? `Scenario: ${state.data.scenario.name}`
+                : "Base forecast"}
+            </p>
+            <ForecastView data={state.data} />
+            {state.base && (
+              <ScenarioComparison base={state.base} scenario={state.data} />
+            )}
+          </>
+        )
       )}
     </div>
+  );
+}
+
+export function ScenarioComparison({
+  base,
+  scenario,
+}: {
+  base: ForecastResult;
+  scenario: ForecastResult;
+}) {
+  return (
+    <section className={panelClass}>
+      <h2 className="text-xl font-semibold">Base vs scenario</h2>
+      <CashChart data={scenario} comparison={base} />
+      <p className="mt-3 text-sm">
+        Minimum cash: base {money(base.minimum_projected_cash, base.currency)} ·
+        scenario {money(scenario.minimum_projected_cash, scenario.currency)}
+      </p>
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr>
+              <th scope="col" className="p-3">
+                Week
+              </th>
+              <th scope="col" className="p-3">
+                Base closing cash
+              </th>
+              <th scope="col" className="p-3">
+                Scenario closing cash
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {scenario.weekly.map((week, index) => (
+              <tr key={week.week_number}>
+                <th scope="row" className="border-t p-3">
+                  {week.week_number}
+                </th>
+                <td className="border-t p-3">
+                  {money(base.weekly[index].closing_cash, base.currency)}
+                </td>
+                <td className="border-t p-3">
+                  {money(week.closing_cash, scenario.currency)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
@@ -184,11 +311,19 @@ export function ForecastView({ data }: { data: ForecastResult }) {
   );
 }
 
-export function CashChart({ data }: { data: ForecastResult }) {
+export function CashChart({
+  data,
+  comparison,
+}: {
+  data: ForecastResult;
+  comparison?: ForecastResult;
+}) {
   const values = data.weekly.map((week) => Number(week.closing_cash));
   const threshold = Number(data.minimum_cash_threshold);
-  const low = Math.min(0, threshold, ...values),
-    high = Math.max(0, threshold, ...values);
+  const baseValues =
+    comparison?.weekly.map((week) => Number(week.closing_cash)) ?? [];
+  const low = Math.min(0, threshold, ...values, ...baseValues),
+    high = Math.max(0, threshold, ...values, ...baseValues);
   const span = Math.max(1, high - low);
   const y = (value: number) => 240 - ((value - low) / span) * 200;
   const x = (index: number) =>
@@ -196,7 +331,9 @@ export function CashChart({ data }: { data: ForecastResult }) {
   return (
     <figure className={panelClass}>
       <figcaption className="text-xl font-semibold">
-        Projected closing cash
+        {comparison
+          ? "Base vs scenario closing cash"
+          : "Projected closing cash"}
       </figcaption>
       <svg
         role="img"
@@ -226,6 +363,27 @@ export function CashChart({ data }: { data: ForecastResult }) {
           stroke="#164d3b"
           strokeWidth="3"
         />
+        {comparison && (
+          <polyline
+            points={baseValues
+              .map((value, index) => `${x(index)},${y(value)}`)
+              .join(" ")}
+            fill="none"
+            stroke="#577b9a"
+            strokeWidth="3"
+            strokeDasharray="8 3"
+          />
+        )}
+        {comparison &&
+          baseValues.map((value, index) => (
+            <circle
+              key={`base-${index}`}
+              cx={x(index)}
+              cy={y(value)}
+              r="4"
+              fill="#577b9a"
+            />
+          ))}
         {values.map((value, index) => (
           <g key={index}>
             <circle
@@ -244,6 +402,7 @@ export function CashChart({ data }: { data: ForecastResult }) {
       </svg>
       <p className="text-xs text-[#53675d]">
         Week number · Dashed line: minimum cash threshold
+        {comparison && " · Green: scenario; blue: base"}
       </p>
     </figure>
   );
